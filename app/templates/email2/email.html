@@ -1,68 +1,98 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Security Intelligence Report</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Security Intelligence Report</title>
+<style type="text/css">
+/* Base styles for email clients */
+body { margin: 0; padding: 0; min-width: 100%; background-color: #f7fafc; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+table { border-spacing: 0; font-family: sans-serif; color: #333333; }
+td { padding: 0; }
+img { border: 0; }
+.content { width: 600px; max-width: 100%; }
+.header { padding: 40px 30px; background: #1a365d; }
+.header-content { }
+.logo { width: 60px; height: 60px; }
+.title { font-size: 24px; color: #ffffff; font-weight: bold; }
+.date { font-size: 14px; color: #e2e8f0; margin-top: 10px; }
+.task-section { padding: 30px; background: #ffffff; }
+.task-title { font-size: 20px; color: #2c5282; margin-bottom: 20px; }
+.task { margin-bottom: 20px; padding: 15px; border-left: 4px solid #38a169; background: #f8fafc; }
+.task.urgent { border-left-color: #e53e3e; }
+.task-header { margin-bottom: 10px; }
+.task-name { font-weight: bold; color: #1a365d; }
+.category-tag { font-size: 12px; color: #2c5282; background: #f7fafc; padding: 4px 12px; border-radius: 999px; }
+.task-desc { font-size: 14px; color: #4a5568; }
+.insights { margin-top: 30px; padding: 30px; background: #ffffff; }
+.insight-title { font-size: 18px; color: #2c5282; margin-bottom: 15px; }
+</style>
 </head>
-<body style="margin: 0; padding: 20px; background-color: #f7fafc; font-family: Arial, sans-serif; line-height: 1.6; color: #2d3748; -webkit-text-size-adjust: 100%;">
-    <!-- Container for Outlook -->
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+<body>
+<center>
+<table cellpadding="0" cellspacing="0" width="100%" style="min-width: 100%;">
+  <tr>
+    <td align="center" bgcolor="#f7fafc">
+      <table class="content" cellpadding="0" cellspacing="0">
+        <!-- Header -->
         <tr>
-            <td>
-                <!-- Main content container -->
-                <table role="presentation" width="100%" max-width="600" cellpadding="0" cellspacing="0" border="0" align="center" style="margin: auto;">
+          <td class="header">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td class="header-content">
+                  <table cellpadding="0" cellspacing="0">
                     <tr>
-                        <td style="background-color: #1a365d; padding: 30px; border-radius: 8px;">
-                            <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: bold;">Security Intelligence Report</h1>
-                            <div style="color: #e2e8f0; font-size: 16px; margin-top: 8px;">{{ date }}</div>
-                        </td>
+                      <td>
+                        <div class="title">Security Intelligence Report</div>
+                        <div class="date">{{ date }}</div>
+                      </td>
+                      <td align="right" style="padding-left: 20px;">
+                        <img src="{{ logo_url|default('/path/to/default-logo.png') }}" alt="Logo" class="logo">
+                      </td>
                     </tr>
-
-                    {% if summary is mapping %}
-                        {% for category, content in summary.items() %}
-                            {% if content.section_title and content.section_title != "No Summary Available" %}
-                                <tr>
-                                    <td style="background-color: #ffffff; padding: 30px; margin-top: 20px; border-radius: 8px;">
-                                        <h2 style="color: #2c5282; margin-top: 0; padding-bottom: 15px; border-bottom: 2px solid #e2e8f0; font-size: 20px;">{{ category }}</h2>
-                                        <h3 style="color: #1a365d; font-size: 18px; margin-top: 20px; margin-bottom: 15px;">{{ content.section_title }}</h3>
-                                        
-                                        <div style="margin: 20px 0; line-height: 1.7;">
-                                            {{ content.summary | markdown | safe }}
-                                        </div>
-
-                                        {% if content.actionable_tasks %}
-                                            <div style="background-color: #f8fafc; padding: 20px; border-radius: 6px; margin-top: 25px;">
-                                                <h4 style="color: #2c5282; font-size: 16px; margin-top: 0; margin-bottom: 8px;">Actionable Tasks:</h4>
-                                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                                                    {% for task in content.actionable_tasks %}
-                                                        <tr>
-                                                            <td style="padding: 15px; background-color: #ffffff; border-left: 4px solid #e53e3e; margin-bottom: 15px; border-radius: 4px;">
-                                                                <strong style="color: #1a365d; display: block; margin-bottom: 8px;">{{ task.task }}</strong>
-                                                                {% if task.description %}
-                                                                    <div style="color: #4a5568; font-size: 14px; margin-top: 8px;">{{ task.description }}</div>
-                                                                {% endif %}
-                                                            </td>
-                                                        </tr>
-                                                    {% endfor %}
-                                                </table>
-                                            </div>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                            {% endif %}
-                        {% endfor %}
-                    {% else %}
-                        <tr>
-                            <td style="color: #e53e3e; padding: 15px;">
-                                Error: Summary is not a dictionary. Type: {{ summary.__class__.__name__ }}
-                                <pre>{{ summary }}</pre>
-                            </td>
-                        </tr>
-                    {% endif %}
-                </table>
-            </td>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
         </tr>
-    </table>
+
+        <!-- Critical Tasks -->
+        <tr>
+          <td class="task-section">
+            <div class="task-title">Critical Security Tasks</div>
+            {% for category, content in summary.items() %}
+              {% if content.actionable_tasks %}
+                {% for task in content.actionable_tasks %}
+                  <div class="task {% if 'Update' in task.task or 'Critical' in task.description %}urgent{% endif %}">
+                    <div class="task-header">
+                        <span class="task-name">{{ task.task }}</span>
+                    </div>
+                    <div class="task-desc">{{ task.description }}</div>
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endfor %}
+          </td>
+        </tr>
+
+        <!-- Summary Sections -->
+        {% for category, content in summary.items() %}
+          {% if content.section_title and content.section_title != "No Summary Available" %}
+            <tr>
+              <td class="insights">
+                <div class="insight-title">{{ content.section_title }}</div>
+                <div style="color: #4a5568; line-height: 1.6; margin-top: 15px;">
+                  {{ content.summary | markdown | safe }}
+                </div>
+              </td>
+            </tr>
+          {% endif %}
+        {% endfor %}
+      </table>
+    </td>
+  </tr>
+</table>
+</center>
 </body>
 </html>

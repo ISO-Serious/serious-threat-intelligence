@@ -215,18 +215,21 @@ def get_email():
 def get_email2():
     """Endpoint to retrieve the most recent daily summary as formatted HTML for email clients."""
     try:
-        result = get_latest_summary(current_app.config['DATABASE_PATH'])
+        summary_id = request.args.get('id')
+        if summary_id:
+            result = get_summary_by_id(current_app.config['DATABASE_PATH'], summary_id)
+        else:
+            result = get_latest_summary(current_app.config['DATABASE_PATH'])
         
         if result:
             date_str = datetime.fromisoformat(result['date']).strftime('%A, %B %d, %Y')
-            
             return render_template(
-                'email2/email.html',
+                'email/summary.html',
                 summary=result['summary'],
                 date=date_str
             )
         else:
-            return "No recent summaries found in the database", 404
+            return "Summary not found", 404
             
     except Exception as e:
         logger.error(f"Error generating email2 view: {str(e)}")

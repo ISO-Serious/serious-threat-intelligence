@@ -11,7 +11,7 @@
         <ul>
         {% for id, date in summaries %}
             <li class="flex justify-between items-center py-2">
-                <a href="{{ url_for('main.get_email', id=id) }}">{{ date }}</a>
+                <a href="{{ url_for('main.get_email', id=id) }}">{{ date }}</a> |  <a href="{{ url_for('main.get_email2', id=id) }}">Email Formatted</a>
                 <button 
                     onclick="if(confirm('Are you sure you want to delete this summary?')) deleteSummary({{ id }})"
                     class="text-red-600 hover:text-red-800"
