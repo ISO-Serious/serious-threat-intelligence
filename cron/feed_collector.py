@@ -4,6 +4,7 @@ import sqlite3
 import time
 import html
 import logging
+import os
 from pathlib import Path
 import argparse
 
@@ -145,7 +146,8 @@ def main():
     
     try:
         while True:
-            collector = FeedCollector(args.db)
+            db_path = os.getenv('DATABASE_PATH') or args.db
+            collector = FeedCollector(db_path)
             collector.collect_articles()
             logger.info(f"Sleeping for {args.interval} seconds...")
             time.sleep(args.interval)

@@ -204,12 +204,13 @@ def main():
     args = parser.parse_args()
     
     try:
+        db_path = os.getenv('DATABASE_PATH') or args.db
         api_key = os.getenv('CLAUDE_API_KEY') or args.api_key
         if not api_key:
             raise ValueError("API key not found in CLAUDE_API_KEY environment variable or --api-key argument")
             
         summarizer = ArticleSummarizer(api_key=api_key)
-        feed_summarizer = FeedSummarizer(args.db, summarizer)
+        feed_summarizer = FeedSummarizer(db_path, summarizer)
         summary = feed_summarizer.generate_daily_summary()
         
         # Print summary to stdout for potential piping to other processes

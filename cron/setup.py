@@ -125,13 +125,14 @@ def main():
     parser = argparse.ArgumentParser(description='RSS Feed Aggregator Setup')
     parser.add_argument('--db', default='../rss_feeds.db',
                        help='Database file path (default: rss_feeds.db)')
-    parser.add_argument('--config', help='Feed configuration JSON file')
+    parser.add_argument('--config', help='Feed configuration JSON file', default='feeds.json')
     parser.add_argument('--list', action='store_true',
                        help='List configured feeds')
     
     args = parser.parse_args()
     
-    setup = DatabaseSetup(args.db)
+    db_path = os.getenv('DATABASE_PATH') or args.db
+    setup = DatabaseSetup(db_path)
     
     # Initialize database
     setup.initialize_database()
