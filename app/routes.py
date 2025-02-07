@@ -189,6 +189,11 @@ def debug_view():
         return "No data found", 404
     except Exception as e:
         return f"Error: {str(e)}", 500
+    
+@main.route('/')
+def index():
+    """Simple health check endpoint for monitoring."""
+    return "Hello World", 200    
 
 @main.route('/health')
 def health_check():

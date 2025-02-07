@@ -31,3 +31,4 @@ lxml>=4.9.3           # Faster XML processing for feedparser
 
 # Development and debugging
 python-dotenv==1.0.1  # For loading environment variables
+gunicorn==21.2.0       # For running the Flask app
