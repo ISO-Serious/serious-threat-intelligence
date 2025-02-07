@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Intelligence Report</title>
+</head>
+<body style="margin: 0; padding: 20px; background-color: #f7fafc; font-family: Arial, sans-serif; line-height: 1.6; color: #2d3748; -webkit-text-size-adjust: 100%;">
+    <!-- Container for Outlook -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+            <td>
+                <!-- Main content container -->
+                <table role="presentation" width="100%" max-width="600" cellpadding="0" cellspacing="0" border="0" align="center" style="margin: auto;">
+                    <tr>
+                        <td style="background-color: #1a365d; padding: 30px; border-radius: 8px;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: bold;">Security Intelligence Report</h1>
+                            <div style="color: #e2e8f0; font-size: 16px; margin-top: 8px;">{{ date }}</div>
+                        </td>
+                    </tr>
+
+                    {% if summary is mapping %}
+                        {% for category, content in summary.items() %}
+                            {% if content.section_title and content.section_title != "No Summary Available" %}
+                                <tr>
+                                    <td style="background-color: #ffffff; padding: 30px; margin-top: 20px; border-radius: 8px;">
+                                        <h2 style="color: #2c5282; margin-top: 0; padding-bottom: 15px; border-bottom: 2px solid #e2e8f0; font-size: 20px;">{{ category }}</h2>
+                                        <h3 style="color: #1a365d; font-size: 18px; margin-top: 20px; margin-bottom: 15px;">{{ content.section_title }}</h3>
+                                        
+                                        <div style="margin: 20px 0; line-height: 1.7;">
+                                            {{ content.summary | markdown | safe }}
+                                        </div>
+
+                                        {% if content.actionable_tasks %}
+                                            <div style="background-color: #f8fafc; padding: 20px; border-radius: 6px; margin-top: 25px;">
+                                                <h4 style="color: #2c5282; font-size: 16px; margin-top: 0; margin-bottom: 8px;">Actionable Tasks:</h4>
+                                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                                                    {% for task in content.actionable_tasks %}
+                                                        <tr>
+                                                            <td style="padding: 15px; background-color: #ffffff; border-left: 4px solid #e53e3e; margin-bottom: 15px; border-radius: 4px;">
+                                                                <strong style="color: #1a365d; display: block; margin-bottom: 8px;">{{ task.task }}</strong>
+                                                                {% if task.description %}
+                                                                    <div style="color: #4a5568; font-size: 14px; margin-top: 8px;">{{ task.description }}</div>
+                                                                {% endif %}
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </table>
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td style="color: #e53e3e; padding: 15px;">
+                                Error: Summary is not a dictionary. Type: {{ summary.__class__.__name__ }}
+                                <pre>{{ summary }}</pre>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

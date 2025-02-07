@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header">
+    <h1>Security Intelligence Report</h1>
+    <div class="date">{{ date }}</div>
+</div>
+
+{# Debug info 
+<div style="background: #f0f0f0; padding: 10px; margin: 10px 0; font-family: monospace;">
+Summary type: {{ summary.__class__.__name__ }}
+Keys: {% if summary is mapping %}{{ summary.keys()|list }}{% else %}Not a mapping{% endif %}
+</div>
+#}
+
+{% if summary is mapping %}
+    {% for category, content in summary.items() %}
+        {% if content.section_title and content.section_title != "No Summary Available" %}
+            <div class="category">
+                <h2>{{ category }}</h2>
+                <h3>{{ content.section_title }}</h3>
+                
+                <div class="summary-content markdown-content">
+                    {{ content.summary | markdown | safe }}
+                </div>
+
+                {% if content.actionable_tasks %}
+                    <div class="tasks-section">
+                        <h4>Actionable Tasks:</h4>
+                        <ul class="tasks-list">
+                            {% for task in content.actionable_tasks %}
+                                <li class="task-item">
+                                    <strong>{{ task.task }}</strong>
+                                    {% if task.description %}
+                                        <div class="task-description">{{ task.description }}</div>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% endfor %}
+{% else %}
+    <div style="color: red; padding: 10px;">
+        Error: Summary is not a dictionary. Type: {{ summary.__class__.__name__ }}
+        <pre>{{ summary }}</pre>
+    </div>
+{% endif %}
+{% endblock %}

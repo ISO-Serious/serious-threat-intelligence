@@ -1,0 +1,114 @@
+{
+    "feeds": [
+        {
+            "name": "US-CERT Alerts",
+            "url": "https://www.us-cert.gov/ncas/alerts.xml",
+            "category": "Government Advisories"
+        },
+        {
+            "name": "Bleeping Computer",
+            "url": "https://www.bleepingcomputer.com/feed/",
+            "category": "News and Analysis"
+        },
+        {
+            "name": "Threatpost",
+            "url": "https://threatpost.com/feed/",
+            "category": "News and Analysis"
+        },
+        {
+            "name": "Dark Reading",
+            "url": "https://www.darkreading.com/rss.xml",
+            "category": "News and Analysis"
+        },
+        {
+            "name": "Krebs on Security",
+            "url": "https://krebsonsecurity.com/feed/",
+            "category": "Security Research"
+        },
+        {
+            "name": "Security Week",
+            "url": "https://www.securityweek.com/rss",
+            "category": "News and Analysis"
+        },
+        {
+            "name": "The Hacker News",
+            "url": "https://feeds.feedburner.com/TheHackersNews",
+            "category": "News and Analysis"
+        },
+        {
+            "name": "Schneier on Security",
+            "url": "https://www.schneier.com/blog/atom.xml",
+            "category": "Security Research"
+        },
+        {
+            "name": "SANS Internet Storm Center",
+            "url": "https://isc.sans.edu/rssfeed.xml",
+            "category": "Threat Intelligence"
+        },
+        {
+            "name": "Cisco Security",
+            "url": "https://blogs.cisco.com/security/feed",
+            "category": "Vendor Updates"
+        },
+        {
+            "name": "Tripwire State of Security",
+            "url": "https://www.tripwire.com/state-of-security/feed/",
+            "category": "Vendor Updates"
+        },
+        {
+            "name": "Check Point Research",
+            "url": "https://research.checkpoint.com/feed/",
+            "category": "Threat Intelligence"
+        },
+        {
+            "name": "ZDNet Security",
+            "url": "https://www.zdnet.com/topic/security/rss.xml",
+            "category": "News and Analysis"
+        },
+        {
+            "name": "Infosecurity Magazine",
+            "url": "https://www.infosecurity-magazine.com/rss/news/",
+            "category": "News and Analysis"
+        },
+        {
+            "name": "AT&T Cybersecurity",
+            "url": "https://cybersecurity.att.com/site/blog-all-rss",
+            "category": "Vendor Updates"
+        },
+        {
+            "name": "Cybereason",
+            "url": "https://www.cybereason.com/blog/rss.xml",
+            "category": "Vendor Updates"
+        },
+        {
+            "name": "Qualys Blog",
+            "url": "https://blog.qualys.com/feed/",
+            "category": "Vendor Updates"
+        },
+        {
+            "name": "Tenable Blog",
+            "url": "https://www.tenable.com/blog/feed",
+            "category": "Vendor Updates"
+        },
+        {
+            "name": "Black Hills Information Security",
+            "url": "https://www.blackhillsinfosec.com/feed/",
+            "category": "Security Research"
+        },
+        {
+            "name": "Palo Alto Unit 42",
+            "url": "https://unit42.paloaltonetworks.com/feed/",
+            "category": "Threat Intelligence"
+        },
+        {
+            "name": "Security Affairs",
+            "url": "https://securityaffairs.co/wordpress/feed",
+            "category": "News and Analysis"
+        }
+    ],
+    "settings": {
+        "default_category": "General Security",
+        "feed_refresh_interval": 1800,
+        "max_articles_per_feed": 50
+    }
+}

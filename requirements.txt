@@ -1,0 +1,33 @@
+# Core RSS feed handling
+feedparser>=6.0.10    # For parsing RSS and Atom feeds
+html5lib>=1.1         # For robust HTML parsing
+
+# Web framework and server
+Flask==3.0.2
+Flask-Caching==2.1.0
+Werkzeug==3.0.1
+SQLAlchemy==2.0.27
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.0.5
+gunicorn==21.2.0
+email-validator==2.1.0.post1
+markdown2==2.4.12
+bleach==6.1.0
+
+# Date and time handling
+python-dateutil>=2.8.2  # For parsing various date formats in feeds
+pytz==2024.1           # For proper timezone handling
+
+# Database
+#sqlite3               # Comes with Python, no need to install separately
+
+# API Integration
+anthropic>=0.6.0      # For interacting with Claude API
+
+# Utility libraries
+requests>=2.31.0      # For making HTTP requests
+beautifulsoup4>=4.12.2  # For additional HTML parsing capabilities
+lxml>=4.9.3           # Faster XML processing for feedparser
+
+# Development and debugging
+python-dotenv==1.0.1  # For loading environment variables
