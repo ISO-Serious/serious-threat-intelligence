@@ -4,6 +4,7 @@ import logging
 import anthropic
 import json
 import re
+import os
 from pathlib import Path
 import argparse
 from prompts import ARTICLE_SUMMARY_PROMPT
@@ -197,13 +198,17 @@ def main():
     
     parser.add_argument('--db', default='../rss_feeds.db',
                        help='Database file path (default: rss_feeds.db)')
-    parser.add_argument('--api-key', required=True,
+    parser.add_argument('--api-key', required=False,
                        help='Claude API key for generating summaries')
     
     args = parser.parse_args()
     
     try:
-        summarizer = ArticleSummarizer(api_key=args.api_key)
+        api_key = os.getenv('CLAUDE_API_KEY') or args.api_key
+        if not api_key:
+            raise ValueError("API key not found in CLAUDE_API_KEY environment variable or --api-key argument")
+            
+        summarizer = ArticleSummarizer(api_key=api_key)
         feed_summarizer = FeedSummarizer(args.db, summarizer)
         summary = feed_summarizer.generate_daily_summary()
         
