@@ -141,7 +141,7 @@ def get_email():
             
     except Exception as e:
         logger.error(f"Error generating email view: {str(e)}")
-        return f"Error generating email view: {str(e)}", 500
+        return f"Error generating email view: {str(e)} (PATH: {current_app.config['DATABASE_PATH']})", 500
     
 @main.route('/email2')
 def get_email2():
