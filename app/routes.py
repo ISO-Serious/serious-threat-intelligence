@@ -224,7 +224,7 @@ def get_email2():
         if result:
             date_str = datetime.fromisoformat(result['date']).strftime('%A, %B %d, %Y')
             return render_template(
-                'email/summary.html',
+                'email2/email.html',
                 summary=result['summary'],
                 date=date_str
             )
