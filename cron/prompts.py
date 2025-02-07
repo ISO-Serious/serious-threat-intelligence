@@ -36,9 +36,10 @@ Return exactly one JSON object in this format:
 
 For the summary field:
 - Use markdown format
-- Include section headers with two asterisks
-- Format URLs as [text](url)
 - No HTML tags
+- Do not add any sub-headings or bullet points. It should be one or two paragraphs. With relevant keywords linked to the original articles.
+- Format URLs as [text](url)
+- If the article does not suggest any actionable tasks, then ignore it and move onto the next one.
 
 If there aren't enough articles to summarize, return:
 {{

@@ -17,6 +17,10 @@ class Config:
     # App settings
     ITEMS_PER_PAGE = int(os.environ.get('ITEMS_PER_PAGE', 10))
 
+    # Authentication settings
+    AUTH_USERNAME = os.environ.get('AUTH_USERNAME', 'admin')
+    AUTH_PASSWORD = os.environ.get('AUTH_PASSWORD', 'munk1luvver')
+
 
 class DevelopmentConfig(Config):
     """Development configuration."""

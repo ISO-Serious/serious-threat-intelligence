@@ -214,7 +214,7 @@ def main():
         summary = feed_summarizer.generate_daily_summary()
         
         # Print summary to stdout for potential piping to other processes
-        print(json.dumps(summary, indent=2))
+        # print(json.dumps(summary, indent=2))
         
     except Exception as e:
         logger.error(f"Summary generation failed: {str(e)}")

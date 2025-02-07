@@ -1,9 +1,11 @@
 :root {
-    --primary-color: #1a365d;
+    --primary-color: #065dc3;
     --secondary-color: #2c5282;
     --accent-color: #e53e3e;
     --bg-color: #f7fafc;
     --text-color: #2d3748;
+    --success-color: #a28231;
+    --urgent-color: #e53e3e;
 }
 
 body {
@@ -25,128 +27,125 @@ body {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-h1 {
-    margin: 0;
-    font-size: 2.5rem;
-    font-weight: 700;
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.date {
-    color: #e2e8f0;
-    font-size: 1.1rem;
-    margin-top: 0.5rem;
-}
-
-.category {
+.logo img {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
     background: white;
-    margin-bottom: 2rem;
+    padding: 8px;
+}
+
+.quick-actions {
+    background: white;
     padding: 2rem;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-bottom: 3rem;
 }
 
-h2 {
-    color: var(--secondary-color);
-    margin-top: 0;
-    padding-bottom: 1rem;
-    border-bottom: 2px solid #e2e8f0;
-    font-size: 1.8rem;
-}
-
-h3 {
-    color: var(--primary-color);
-    font-size: 1.4rem;
+.priority-tasks {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
     margin-top: 1.5rem;
-    margin-bottom: 1rem;
-}
-
-h4 {
-    color: var(--secondary-color);
-    font-size: 1.2rem;
-    margin-top: 1.5rem;
-    margin-bottom: 0.5rem;
-}
-
-.markdown-content {
-    margin: 1.5rem 0;
-    line-height: 1.7;
-}
-
-.markdown-content a {
-    color: var(--secondary-color);
-    text-decoration: none;
-    border-bottom: 1px solid var(--secondary-color);
-}
-
-.markdown-content a:hover {
-    border-bottom-width: 2px;
-}
-
-.markdown-content strong {
-    color: var(--primary-color);
-}
-
-.markdown-content ul {
-    list-style-type: disc;
-    padding-left: 2rem;
-    margin: 1rem 0;
-}
-
-.markdown-content li {
-    margin-bottom: 0.5rem;
-}
-
-.tasks-section {
-    background-color: #f8fafc;
-    padding: 1.5rem;
-    border-radius: 6px;
-    margin-top: 2rem;
-}
-
-.tasks-list {
-    list-style: none;
-    padding-left: 0;
-    margin: 1rem 0 0 0;
 }
 
 .task-item {
-    margin-bottom: 1rem;
-    padding: 1rem;
-    background-color: white;
-    border-radius: 4px;
-    border-left: 4px solid var(--accent-color);
+    background: white;
+    border-radius: 6px;
+    padding: 1.25rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border-left: 4px solid var(--success-color);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.task-item strong {
+.task-item.urgent {
+    border-left-color: var(--urgent-color);
+}
+
+.task-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+}
+
+.task-header strong {
+    font-size: 1.1rem;
     color: var(--primary-color);
-    display: block;
-    margin-bottom: 0.5rem;
+}
+
+.category-tag {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    background-color: var(--bg-color);
+    color: var(--secondary-color);
+    border-radius: 999px;
+    font-weight: 500;
+    white-space: nowrap;
 }
 
 .task-description {
     color: #4a5568;
     font-size: 0.95rem;
-    margin-top: 0.5rem;
+    line-height: 1.5;
+}
+
+.insights {
+    display: grid;
+    gap: 2rem;
+}
+
+.category {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.context-tag {
+    font-size: 0.85rem;
+    padding: 0.35rem 1rem;
+    background-color: var(--bg-color);
+    color: var(--secondary-color);
+    border-radius: 999px;
+    font-weight: 500;
+}
+
+.markdown-content {
+    color: #4a5568;
+    line-height: 1.7;
 }
 
 @media (max-width: 768px) {
-    body {
-        padding: 10px;
-    }
-
-    .header {
-        padding: 1.5rem;
-    }
-
-    h1 {
-        font-size: 2rem;
-    }
-
-    .category {
-        padding: 1rem;
+    .priority-tasks {
+        grid-template-columns: 1fr;
     }
     
-    .task-item {
-        padding: 0.75rem;
+    .task-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .category-tag {
+        align-self: flex-start;
     }
 }
