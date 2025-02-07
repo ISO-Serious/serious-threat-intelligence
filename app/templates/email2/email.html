@@ -39,25 +39,18 @@ img { border: 0; }
           <td class="header">
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
-                <td class="header-content">
-                  <table cellpadding="0" cellspacing="0">
-                    <tr>
-                      <td>
-                        <div class="title">Security Intelligence Report</div>
-                        <div class="date">{{ date }}</div>
-                      </td>
-                      <td align="right" style="padding-left: 20px;">
-                        <img src="{{ logo_url|default('/path/to/default-logo.png') }}" alt="Logo" class="logo">
-                      </td>
-                    </tr>
-                  </table>
+                <td style="width: 70%">
+                  <div class="title">Security Intelligence Report</div>
+                  <div class="date">{{ date }}</div>
+                </td>
+                <td style="width: 30%; text-align: right;">
+                  <img src="{{ url_for('static', filename='images/dontpanic.png') }}" alt="Logo" class="logo">
                 </td>
               </tr>
             </table>
           </td>
         </tr>
-
-        <!-- Critical Tasks -->
+\        <!-- Critical Tasks -->
         <tr>
           <td class="task-section">
             <div class="task-title">Critical Security Tasks</div>
