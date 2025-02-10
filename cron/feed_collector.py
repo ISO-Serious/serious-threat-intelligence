@@ -141,6 +141,8 @@ def main():
                        help='Database file path (default: rss_feeds.db)')
     parser.add_argument('--interval', type=int, default=3600,
                        help='Run interval in seconds (default: 3600 for 1 hour)')
+    parser.add_argument('--cron', action='store_true',
+                       help='Run once and exit (for cron jobs)')
     
     args = parser.parse_args()
     
@@ -149,6 +151,11 @@ def main():
             db_path = os.getenv('DATABASE_PATH') or args.db
             collector = FeedCollector(db_path)
             collector.collect_articles()
+            
+            if args.cron:
+                logger.info("Running in cron mode - exiting after single execution")
+                break
+                
             logger.info(f"Sleeping for {args.interval} seconds...")
             time.sleep(args.interval)
             

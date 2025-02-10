@@ -200,22 +200,36 @@ def main():
                        help='Database file path (default: rss_feeds.db)')
     parser.add_argument('--api-key', required=False,
                        help='Claude API key for generating summaries')
+    parser.add_argument('--interval', type=int, default=86400,
+                       help='Run interval in seconds (default: 86400 for 24 hours)')
+    parser.add_argument('--cron', action='store_true',
+                       help='Run once and exit (for cron jobs)')
     
     args = parser.parse_args()
     
     try:
-        db_path = os.getenv('DATABASE_PATH') or args.db
-        api_key = os.getenv('CLAUDE_API_KEY') or args.api_key
-        if not api_key:
-            raise ValueError("API key not found in CLAUDE_API_KEY environment variable or --api-key argument")
+        while True:
+            db_path = os.getenv('DATABASE_PATH') or args.db
+            api_key = os.getenv('CLAUDE_API_KEY') or args.api_key
+            if not api_key:
+                raise ValueError("API key not found in CLAUDE_API_KEY environment variable or --api-key argument")
+                
+            summarizer = ArticleSummarizer(api_key=api_key)
+            feed_summarizer = FeedSummarizer(db_path, summarizer)
+            summary = feed_summarizer.generate_daily_summary()
             
-        summarizer = ArticleSummarizer(api_key=api_key)
-        feed_summarizer = FeedSummarizer(db_path, summarizer)
-        summary = feed_summarizer.generate_daily_summary()
-        
-        # Print summary to stdout for potential piping to other processes
-        # print(json.dumps(summary, indent=2))
-        
+            # Print summary to stdout for potential piping to other processes
+            # print(json.dumps(summary, indent=2))
+            
+            if args.cron:
+                logger.info("Running in cron mode - exiting after single execution")
+                break
+                
+            logger.info(f"Sleeping for {args.interval} seconds...")
+            time.sleep(args.interval)
+            
+    except KeyboardInterrupt:
+        logger.info("Summary generation stopped by user")
     except Exception as e:
         logger.error(f"Summary generation failed: {str(e)}")
         raise
