@@ -1,11 +1,15 @@
 from flask import Blueprint, render_template, request, current_app
 from datetime import datetime
-from app.utils.database import get_all_summary_dates, get_latest_summary, get_summary_by_id
+from app.utils.database import get_all_summary_dates, get_latest_summary, get_summary_by_id, get_recent_articles
 from app.utils.auth import requires_auth
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 web = Blueprint('web', __name__)
+
+def strip_html(text):
+    return re.sub('<[^<]+?>', '', text)
 
 @web.route('/')
 def index():
@@ -20,10 +24,14 @@ def health_check():
 def list_emails():
     try:
         summaries = get_all_summary_dates(current_app.config['DATABASE_PATH'])
+        articles = get_recent_articles(current_app.config['DATABASE_PATH'])
         return render_template(
             'email/list.html',
             summaries=[(id, datetime.fromisoformat(date).strftime('%A, %B %d, %Y')) 
-                      for id, date in summaries]
+                      for id, date in summaries],
+            articles=[(article[0], article[1], article[2], strip_html(article[3]), 
+                      datetime.fromisoformat(str(article[4])).strftime('%B %d, %Y'))
+                     for article in articles]
         )
     except Exception as e:
         logger.error(f"Error listing summaries: {str(e)}")

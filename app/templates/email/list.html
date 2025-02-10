@@ -4,6 +4,11 @@
 <div class="header">
     <h1>Security Intelligence Reports</h1>
 </div>
+<div class="action-buttons my-4">
+    <button onclick="generateSummary()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        Generate New Summary
+    </button>
+</div>
 
 <div class="category">
     <h2>Available Reports</h2>
@@ -28,6 +33,46 @@
         </ul>
     </div>
 </div>
+<p>
+    &nbsp;
+</p>
+<div class="category mt-8">
+    <h2>Recent Articles</h2>
+    <div class="markdown-content">
+        <table class="min-w-full">
+            <thead>
+                <tr class="border-b">
+                    <th class="text-left py-2">Title</th>
+                    <th class="text-left py-2">Summary</th>
+                    <th class="text-left py-2">Date</th>
+                    <th class="text-left py-2">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                {% for id, title, url, summary, date in articles %}
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="py-2"><a href="{{ url }}" target="_blank" class="text-blue-600 hover:text-blue-800">{{ title }}</a></td>
+                        <td class="py-2">{{ summary[:200] }}...</td>
+                        <td class="py-2">{{ date }}</td>
+                        <td class="py-2">
+                            <button 
+                                onclick="if(confirm('Delete this article?')) deleteArticle({{ id }})"
+                                class="text-red-600 hover:text-red-800"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 6h18"></path>
+                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 
 <script>
 function deleteSummary(id) {
@@ -44,6 +89,39 @@ function deleteSummary(id) {
     .catch(error => {
         console.error('Error:', error);
         alert('Failed to delete summary');
+    });
+}
+function deleteArticle(id) {
+    fetch(`/api/article/${id}`, {
+        method: 'DELETE'
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => {
+                throw new Error(text || 'Failed to delete article');
+            });
+        }
+        location.reload();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert(error.message);
+    });
+}
+function generateSummary() {
+    fetch('/api/generate-summary', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert('Summary generation started');
+        } else {
+            throw new Error(data.message);
+        }
+    })
+    .catch(error => {
+        alert('Error: ' + error.message);
     });
 }
 </script>

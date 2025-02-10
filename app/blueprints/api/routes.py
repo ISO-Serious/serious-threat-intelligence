@@ -72,3 +72,24 @@ def delete_summary(summary_id):
     except Exception as e:
         logger.error(f"Error deleting summary {summary_id}: {str(e)}")
         return jsonify({"error": str(e)}), 500
+    
+@api.route('/article/<int:id>', methods=['DELETE'])
+@requires_auth
+def delete_article(id):
+    try:
+        conn = sqlite3.connect(current_app.config['DATABASE_PATH'])
+        c = conn.cursor()
+        
+        # Check if article exists
+        article = c.execute('SELECT id FROM articles WHERE id = ?', (id,)).fetchone()
+        if not article:
+            conn.close()
+            return "Article not found", 404
+            
+        c.execute('DELETE FROM articles WHERE id = ?', (id,))
+        conn.commit()
+        conn.close()
+        return "", 204
+    except Exception as e:
+        logger.error(f"Error deleting article: {str(e)}")
+        return f"Error deleting article: {str(e)}", 500

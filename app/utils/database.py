@@ -69,3 +69,15 @@ def get_all_summary_dates(db_path):
         return results
     finally:
         conn.close()
+
+def get_recent_articles(db_path, limit=50):
+    conn = sqlite3.connect(db_path)
+    c = conn.cursor()
+    articles = c.execute('''
+        SELECT a.id, a.title, a.url, a.summary, a.published
+        FROM articles a
+        ORDER BY a.published DESC
+        LIMIT ?
+    ''', (limit,)).fetchall()
+    conn.close()
+    return articles
