@@ -1,29 +1,24 @@
 from flask import Flask
 from config import config
-from app.utils import from_json
+from .utils import from_json
+from .blueprints import auth, api, web
 import markdown2
 import bleach
 
 def create_app(config_name):
     app = Flask(__name__)
     
-    # Load the config
+    # Load config
     app.config.from_object(config[config_name])
-    config[config_name].init_app(app) if hasattr(config[config_name], 'init_app') else None
+    if hasattr(config[config_name], 'init_app'):
+        config[config_name].init_app(app)
     
     def markdown_filter(text):
-        # Convert markdown to HTML
         html = markdown2.markdown(
             text,
-            extras=[
-                'fenced-code-blocks',
-                'tables',
-                'break-on-newline',
-                'target-blank-links'
-            ]
+            extras=['fenced-code-blocks', 'tables', 'break-on-newline', 'target-blank-links']
         )
         
-        # Sanitize HTML
         allowed_tags = [
             'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'br', 'hr',
             'strong', 'em', 'ul', 'ol', 'li', 'a', 'code', 'pre',
@@ -35,21 +30,20 @@ def create_app(config_name):
             '*': ['class']
         }
         
-        clean_html = bleach.clean(
+        return bleach.clean(
             html,
             tags=allowed_tags,
             attributes=allowed_attrs,
             strip=True
         )
-        
-        return clean_html
     
-    # Register template filters
+    # Register filters
     app.jinja_env.filters['from_json'] = from_json
     app.jinja_env.filters['markdown'] = markdown_filter
     
     # Register blueprints
-    from app.routes import main
-    app.register_blueprint(main)
+    app.register_blueprint(auth)
+    app.register_blueprint(api)
+    app.register_blueprint(web)
     
     return app
