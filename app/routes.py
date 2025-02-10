@@ -1,11 +1,14 @@
-from flask import Blueprint, jsonify, render_template, current_app, request, url_for, session, redirect
+from flask import Blueprint, jsonify, render_template, current_app, request, url_for, session, redirect, Response
 from functools import wraps
-from flask import Response
 import base64
 from datetime import datetime
 import sqlite3
 import json
 import logging
+import subprocess
+import sys
+import os
+from threading import Thread
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +36,31 @@ def requires_auth(f):
             return redirect(url_for('main.login', next=request.url))
         return f(*args, **kwargs)
     return decorated
+
+def run_script_async(script_path, args):
+    """Run a Python script asynchronously with given arguments."""
+    try:
+        cmd = [sys.executable, script_path] + args
+        process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            cwd=os.path.dirname(script_path)
+        )
+        
+        def monitor_process():
+            stdout, stderr = process.communicate()
+            if process.returncode != 0:
+                logger.error(f"Script failed with error: {stderr.decode()}")
+            else:
+                logger.info(f"Script completed successfully: {stdout.decode()}")
+                
+        Thread(target=monitor_process).start()
+        return process.pid
+        
+    except Exception as e:
+        logger.error(f"Failed to start script: {str(e)}")
+        raise
 
 def normalize_json_string(s):
     """Normalize a JSON string to handle escapes and control characters."""
@@ -150,6 +178,82 @@ def get_all_summary_dates(db_path):
     finally:
         conn.close()
 
+@main.route('/api/collect-feeds', methods=['POST'])
+def collect_feeds():
+    """Endpoint to trigger feed collection."""
+    try:
+        if not os.getenv('DATABASE_PATH'):
+            return jsonify({
+                'status': 'error',
+                'message': 'DATABASE_PATH environment variable not set'
+            }), 500
+            
+        script_path = os.path.join(current_app.root_path, '..', 'cron', 'feed_collector.py')
+        args = ['--cron']  # Run once and exit
+        
+        pid = run_script_async(script_path, args)
+        return jsonify({
+            'status': 'success',
+            'message': 'Feed collection started',
+            'process_id': pid
+        }), 202
+        
+    except Exception as e:
+        logger.error(f"Failed to start feed collection: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@main.route('/api/generate-summary', methods=['POST'])
+def generate_summary():
+    """Endpoint to trigger feed summarization."""
+    try:
+        if not os.getenv('DATABASE_PATH'):
+            return jsonify({
+                'status': 'error',
+                'message': 'DATABASE_PATH environment variable not set'
+            }), 500
+            
+        if not os.getenv('CLAUDE_API_KEY'):
+            return jsonify({
+                'status': 'error',
+                'message': 'CLAUDE_API_KEY environment variable not set'
+            }), 500
+            
+        script_path = os.path.join(current_app.root_path, '..', 'cron', 'feed_summary.py')
+        args = ['--cron']  # Run once and exit
+        
+        pid = run_script_async(script_path, args)
+        return jsonify({
+            'status': 'success',
+            'message': 'Summary generation started',
+            'process_id': pid
+        }), 202
+        
+    except Exception as e:
+        logger.error(f"Failed to start summary generation: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@main.route('/api/check-process/<int:pid>', methods=['GET'])
+@requires_auth
+def check_process(pid):
+    """Check if a process is still running."""
+    try:
+        os.kill(pid, 0)  # Send null signal to check process
+        return jsonify({
+            'status': 'running',
+            'process_id': pid
+        })
+    except OSError:
+        return jsonify({
+            'status': 'completed',
+            'process_id': pid
+        })
+
 @main.route('/list-emails')
 @requires_auth
 def list_emails():
@@ -188,6 +292,7 @@ def get_summary():
         }), 500
 
 @main.route('/email')
+@requires_auth
 def get_email():
     """Endpoint to retrieve a specific summary as formatted HTML."""
     try:
