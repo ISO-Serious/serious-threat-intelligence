@@ -37,16 +37,20 @@
 
     <div class="insights">
         {% for category, content in summary.items() %}
-            {% if content.section_title and content.section_title != "No Summary Available" %}
-                <div class="category">
-                    <div class="category-header">
-                        <h3>{{ content.section_title }}</h3>
-                        <span class="context-tag">{{ category }}</span>
-                    </div>
-                    <div class="summary-content markdown-content">
-                        {{ content.summary | markdown | safe }}
-                    </div>
-                </div>
+            {% if content.get('section_title') and content.get('section_title') != 'No Summary Available' %}
+            <div class="category">
+            <div class="category-header">
+                <h3>{{ content.get('section_title', 'No Title') }}</h3>
+                <span class="context-tag">{{ category }}</span>
+            </div>
+            <div class="summary-content markdown-content">
+                {% if content.get('summary') %}
+                {{ content.summary | markdown | safe }}
+                {% else %}
+                <p>No summary available for this section.</p>
+                {% endif %}
+            </div>
+            </div>
             {% endif %}
         {% endfor %}
     </div>

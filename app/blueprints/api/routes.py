@@ -1,11 +1,13 @@
 from flask import Blueprint, jsonify, current_app, request
 import os
-import sqlite3
-import json
+from app.extensions import db
+from app.models import Article, DailySummary
 from app.utils.process import run_script_async
-from app.utils.database import get_latest_summary, get_summary_by_id, parse_double_encoded_json
+from app.utils.database import get_latest_summary, get_summary_by_id
+from app.utils.json import parse_double_encoded_json
 from app.utils.auth import requires_auth
 import logging
+import json
 
 logger = logging.getLogger(__name__)
 api = Blueprint('api', __name__, url_prefix='/api')
@@ -14,8 +16,8 @@ api = Blueprint('api', __name__, url_prefix='/api')
 @requires_auth
 def collect_feeds():
     try:
-        if not os.getenv('DATABASE_PATH'):
-            return jsonify({'status': 'error', 'message': 'DATABASE_PATH not set'}), 500
+        if not os.getenv('DATABASE_URL'):
+            return jsonify({'status': 'error', 'message': 'DATABASE_URL not set'}), 500
             
         script_path = os.path.join(current_app.root_path, '..', 'cron', 'feed_collector.py')
         pid = run_script_async(script_path, ['--cron'])
@@ -29,7 +31,7 @@ def collect_feeds():
 @requires_auth
 def generate_summary():
     try:
-        if not os.getenv('DATABASE_PATH') or not os.getenv('CLAUDE_API_KEY'):
+        if not os.getenv('DATABASE_URL') or not os.getenv('CLAUDE_API_KEY'):
             return jsonify({'status': 'error', 'message': 'Required env vars not set'}), 500
             
         script_path = os.path.join(current_app.root_path, '..', 'cron', 'feed_summary.py')
@@ -53,7 +55,7 @@ def check_process(pid):
 @requires_auth
 def get_summary():
     try:
-        result = get_latest_summary(current_app.config['DATABASE_PATH'])
+        result = get_latest_summary()
         if result:
             return jsonify(result['summary'])
         return jsonify({"error": "No summary available"}), 404
@@ -65,11 +67,9 @@ def get_summary():
 @requires_auth
 def delete_summary(summary_id):
     try:
-        conn = sqlite3.connect(current_app.config['DATABASE_PATH'])
-        c = conn.cursor()
-        c.execute('DELETE FROM daily_summaries WHERE id = ?', (summary_id,))
-        conn.commit()
-        conn.close()
+        summary = DailySummary.query.get_or_404(summary_id)
+        db.session.delete(summary)
+        db.session.commit()
         return '', 204
     except Exception as e:
         logger.error(f"Error deleting summary {summary_id}: {str(e)}")
@@ -79,18 +79,9 @@ def delete_summary(summary_id):
 @requires_auth
 def delete_article(id):
     try:
-        conn = sqlite3.connect(current_app.config['DATABASE_PATH'])
-        c = conn.cursor()
-        
-        # Check if article exists
-        article = c.execute('SELECT id FROM articles WHERE id = ?', (id,)).fetchone()
-        if not article:
-            conn.close()
-            return "Article not found", 404
-            
-        c.execute('DELETE FROM articles WHERE id = ?', (id,))
-        conn.commit()
-        conn.close()
+        article = Article.query.get_or_404(id)
+        db.session.delete(article)
+        db.session.commit()
         return "", 204
     except Exception as e:
         logger.error(f"Error deleting article: {str(e)}")
@@ -99,66 +90,38 @@ def delete_article(id):
 @api.route('/summary/<int:summary_id>/task', methods=['DELETE'])
 @requires_auth
 def delete_task(summary_id):
-    # Validate input parameters first
     category = request.args.get('category')
     task_index = request.args.get('task_index', type=int)
     
     if category is None or task_index is None:
         return jsonify({"error": "Category and task_index are required"}), 400
 
-    conn = None    
     try:
-        # Establish database connection
-        conn = sqlite3.connect(current_app.config['DATABASE_PATH'])
-        c = conn.cursor()
-        
-        # Get the current summary
-        result = c.execute('''
-            SELECT summary
-            FROM daily_summaries 
-            WHERE id = ? AND status = 'complete'
-        ''', (summary_id,)).fetchone()
-        
-        if not result:
-            if conn:
-                conn.close()
+        summary = DailySummary.query.filter_by(id=summary_id, status='complete').first()
+        if not summary:
             return jsonify({"error": "Summary not found"}), 404
             
-        # Parse the summary JSON
         try:
-            summary = parse_double_encoded_json(result[0])
+            if isinstance(summary.summary, str):
+                summary_data = parse_double_encoded_json(summary.summary)
+            else:
+                summary_data = summary.summary
         except Exception as e:
             logger.error(f"Error parsing summary: {str(e)}")
-            if conn:
-                conn.close()
             return jsonify({"error": "Error parsing summary"}), 500
             
-        # Remove the task
-        if category not in summary or 'actionable_tasks' not in summary[category]:
-            if conn:
-                conn.close()
+        if category not in summary_data or 'actionable_tasks' not in summary_data[category]:
             return jsonify({"error": "Category not found or no tasks available"}), 404
             
-        if task_index < 0 or task_index >= len(summary[category]['actionable_tasks']):
-            if conn:
-                conn.close()
+        if task_index < 0 or task_index >= len(summary_data[category]['actionable_tasks']):
             return jsonify({"error": "Task index out of range"}), 400
             
-        # Delete the task and update the database
-        del summary[category]['actionable_tasks'][task_index]
+        del summary_data[category]['actionable_tasks'][task_index]
+        summary.summary = json.dumps(summary_data)
         
-        c.execute('''
-            UPDATE daily_summaries
-            SET summary = ?
-            WHERE id = ?
-        ''', (json.dumps(summary), summary_id))
-        
-        conn.commit()
-        conn.close()
+        db.session.commit()
         return '', 204
             
     except Exception as e:
         logger.error(f"Error deleting task: {str(e)}")
-        if conn:
-            conn.close()
         return jsonify({"error": str(e)}), 500

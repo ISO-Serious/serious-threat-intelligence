@@ -1,5 +1,9 @@
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 class Config:
     # Base directory of the application
@@ -10,6 +14,10 @@ class Config:
     
     # Database configuration
     DATABASE_PATH = os.environ.get('DATABASE_PATH') or str(BASE_DIR / 'rss_feeds.db')
+    
+    # SQLAlchemy configuration
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
     
     # Logging
     LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
@@ -26,13 +34,18 @@ class DevelopmentConfig(Config):
     """Development configuration."""
     DEBUG = True
     DEVELOPMENT = True
+    # You can override the database URI for development if needed
+    # SQLALCHEMY_DATABASE_URI = 'postgresql://dev_user:dev_password@localhost:5432/dev_db'
 
 
 class ProductionConfig(Config):
     """Production configuration."""
     DEBUG = False
     
-    # In production, SECRET_KEY should be set in environment
+    # In production, we'll want to use PostgreSQL
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
+        'postgresql://user:password@localhost:5432/production_db'
+    
     @classmethod
     def init_app(cls, app):
         assert os.environ.get('SECRET_KEY'), 'SECRET_KEY environment variable must be set'
@@ -61,7 +74,7 @@ class TestingConfig(Config):
     TESTING = True
     DEBUG = True
     # Use SQLite in-memory database for testing
-    DATABASE_PATH = ':memory:'
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
 
 
 # Dictionary to map environment names to config classes

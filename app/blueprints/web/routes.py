@@ -4,6 +4,7 @@ from app.utils.database import get_all_summary_dates, get_latest_summary, get_su
 from app.utils.auth import requires_auth
 import logging
 import re
+import json
 
 logger = logging.getLogger(__name__)
 web = Blueprint('web', __name__)
@@ -23,8 +24,9 @@ def health_check():
 @requires_auth
 def list_emails():
     try:
-        summaries = get_all_summary_dates(current_app.config['DATABASE_PATH'])
-        articles = get_recent_articles(current_app.config['DATABASE_PATH'])
+        # Remove DATABASE_PATH as it's no longer needed
+        summaries = get_all_summary_dates()
+        articles = get_recent_articles()
         return render_template(
             'email/list.html',
             summaries=[(id, datetime.fromisoformat(date).strftime('%A, %B %d, %Y')) 
@@ -42,26 +44,33 @@ def list_emails():
 def get_email():
     try:
         summary_id = request.args.get('id')
-        result = get_summary_by_id(current_app.config['DATABASE_PATH'], summary_id) if summary_id else get_latest_summary(current_app.config['DATABASE_PATH'])
+        
+        result = get_summary_by_id(summary_id) if summary_id else get_latest_summary()
         
         if result:
             date_str = datetime.fromisoformat(result['date']).strftime('%A, %B %d, %Y')
-            return render_template('email/summary.html', summary=result['summary'], date=date_str)
-        return "Summary not found", 404
+            summary_dict = json.loads(result['summary'])
+            
+            return render_template('email/summary.html', 
+                                 summary=summary_dict,
+                                 date=date_str)
+        else:
+            return "Summary not found", 404
             
     except Exception as e:
-        logger.error(f"Error generating email view: {str(e)}")
+        import traceback
         return f"Error generating email view: {str(e)}", 500
 
 @web.route('/email2')
 def get_email2():
     try:
         summary_id = request.args.get('id')
-        result = get_summary_by_id(current_app.config['DATABASE_PATH'], summary_id) if summary_id else get_latest_summary(current_app.config['DATABASE_PATH'])
+        result = get_summary_by_id(summary_id) if summary_id else get_latest_summary()
         
         if result:
             date_str = datetime.fromisoformat(result['date']).strftime('%A, %B %d, %Y')
-            return render_template('email2/email.html', summary=result['summary'], date=date_str)
+            summary_dict = json.loads(result['summary'])
+            return render_template('email2/email.html', summary=summary_dict, date=date_str)
         return "Summary not found", 404
             
     except Exception as e:

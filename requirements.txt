@@ -19,7 +19,7 @@ python-dateutil>=2.8.2  # For parsing various date formats in feeds
 pytz==2024.1           # For proper timezone handling
 
 # Database
-#sqlite3               # Comes with Python, no need to install separately
+psycopg2-binary==2.9.9  # PostgreSQL adapter for Python
 
 # API Integration
 anthropic>=0.6.0      # For interacting with Claude API
@@ -31,4 +31,3 @@ lxml>=4.9.3           # Faster XML processing for feedparser
 
 # Development and debugging
 python-dotenv==1.0.1  # For loading environment variables
-gunicorn==21.2.0       # For running the Flask app

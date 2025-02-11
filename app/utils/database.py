@@ -1,83 +1,70 @@
-import sqlite3
+from ..extensions import db
+from ..models import Article, DailySummary
 from .json import parse_double_encoded_json
 import logging
+import json
 
 logger = logging.getLogger(__name__)
 
-def get_latest_summary(db_path):
-    conn = sqlite3.connect(db_path)
-    try:
-        c = conn.cursor()
-        result = c.execute('''
-            SELECT summary, date, generated_at 
-            FROM daily_summaries 
-            WHERE status = 'complete'
-            ORDER BY generated_at DESC 
-            LIMIT 1
-        ''').fetchone()
-        
-        if result:
-            try:
-                parsed_summary = parse_double_encoded_json(result[0])
-                return {
-                    'summary': parsed_summary,
-                    'date': result[1],
-                    'generated_at': result[2]
-                }
-            except Exception as e:
-                logger.error(f"Error parsing summary: {str(e)}")
-                return {
-                    'summary': json.loads(result[0]),
-                    'date': result[1],
-                    'generated_at': result[2]
-                }
-        return None
-    finally:
-        conn.close()
-
-def get_summary_by_id(db_path, summary_id):
-    conn = sqlite3.connect(db_path)
-    try:
-        c = conn.cursor()
-        result = c.execute('''
-            SELECT summary, date, generated_at 
-            FROM daily_summaries 
-            WHERE id = ? AND status = 'complete'
-        ''', (summary_id,)).fetchone()
-        
-        if result:
-            parsed_summary = parse_double_encoded_json(result[0])
+def get_latest_summary():
+    result = DailySummary.query.filter_by(status='complete')\
+        .order_by(DailySummary.generated_at.desc())\
+        .first()
+    
+    if result:
+        try:
+            summary = result.summary if isinstance(result.summary, dict) else parse_double_encoded_json(result.summary)
             return {
-                'summary': parsed_summary,
-                'date': result[1],
-                'generated_at': result[2]
+                'summary': json.dumps(summary),
+                'date': result.date,
+                'generated_at': result.generated_at
             }
-        return None
-    finally:
-        conn.close()
+        except Exception as e:
+            logger.error(f"Error parsing summary: {str(e)}")
+            return {
+                'summary': json.dumps(result.summary),
+                'date': result.date,
+                'generated_at': result.generated_at
+            }
+    return None
 
-def get_all_summary_dates(db_path):
-    conn = sqlite3.connect(db_path)
-    try:
-        c = conn.cursor()
-        results = c.execute('''
-            SELECT id, date 
-            FROM daily_summaries 
-            WHERE status = 'complete'
-            ORDER BY date DESC
-        ''').fetchall()
-        return results
-    finally:
-        conn.close()
+def get_summary_by_id(summary_id):
+    result = DailySummary.query.filter_by(id=summary_id, status='complete').first()
+    
+    if result:
+        try:
+            summary = result.summary if isinstance(result.summary, dict) else parse_double_encoded_json(result.summary)
+            return {
+                'summary': json.dumps(summary),
+                'date': result.date,
+                'generated_at': result.generated_at
+            }
+        except Exception as e:
+            logger.error(f"Error parsing summary: {str(e)}")
+            return {
+                'summary': json.dumps(result.summary),
+                'date': result.date,
+                'generated_at': result.generated_at
+            }
+    return None
 
-def get_recent_articles(db_path, limit=50):
-    conn = sqlite3.connect(db_path)
-    c = conn.cursor()
-    articles = c.execute('''
-        SELECT a.id, a.title, a.url, a.summary, a.published
-        FROM articles a
-        ORDER BY a.published DESC
-        LIMIT ?
-    ''', (limit,)).fetchall()
-    conn.close()
-    return articles
+def get_all_summary_dates():
+    results = DailySummary.query.filter_by(status='complete')\
+        .order_by(DailySummary.date.desc())\
+        .with_entities(DailySummary.id, DailySummary.date)\
+        .all()
+    return results
+
+def get_recent_articles(limit=50):
+    articles = Article.query\
+        .order_by(Article.published.desc())\
+        .limit(limit)\
+        .all()
+    
+    return [(
+        article.id,
+        article.title,
+        article.url,
+        article.summary,
+        article.published
+    ) for article in articles]
