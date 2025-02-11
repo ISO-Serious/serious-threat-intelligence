@@ -12,6 +12,33 @@
         </div>
     </div>
 </div>
+<div class="commentary-section">
+    <div id="commentary-display" class="commentary-display {% if not commentary %}empty{% endif %}">
+        {% if commentary %}
+            <div class="commentary-text">{{ commentary | markdown | safe }}</div>
+        {% else %}
+            <div class="commentary-placeholder">Click here to add a summary</div>
+        {% endif %}
+    </div>
+    <div id="commentary-editor" class="commentary-editor" style="display: none;">
+        <div class="editor-help">
+            <small>Supports Markdown: **bold**, *italic*, # headers, - lists, `code`, etc.</small>
+        </div>
+        <textarea id="commentary-textarea" class="commentary-textarea">{{ commentary }}</textarea>
+        <div class="commentary-actions">
+            <button id="preview-commentary" class="btn-secondary">Preview</button>
+            <button id="save-commentary" class="btn-primary">Save</button>
+            <button id="cancel-commentary" class="btn-secondary">Cancel</button>
+        </div>
+    </div>
+    <div id="commentary-preview" class="commentary-preview" style="display: none;">
+        <div class="preview-content"></div>
+        <div class="commentary-actions">
+            <button id="edit-commentary" class="btn-secondary">Edit</button>
+            <button id="save-preview-commentary" class="btn-primary">Save</button>
+        </div>
+    </div>
+</div>
 
 {% if summary is mapping %}
     <div class="quick-actions">
@@ -120,6 +147,136 @@
             }
         });
     });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const displayDiv = document.getElementById('commentary-display');
+            const editorDiv = document.getElementById('commentary-editor');
+            const previewDiv = document.getElementById('commentary-preview');
+            const textarea = document.getElementById('commentary-textarea');
+            const previewContent = previewDiv.querySelector('.preview-content');
+            
+            const saveBtn = document.getElementById('save-commentary');
+            const cancelBtn = document.getElementById('cancel-commentary');
+            const previewBtn = document.getElementById('preview-commentary');
+            const editBtn = document.getElementById('edit-commentary');
+            const savePreviewBtn = document.getElementById('save-preview-commentary');
+            
+            let originalText = textarea.value;
+            
+            displayDiv.addEventListener('click', function() {
+                displayDiv.style.display = 'none';
+                editorDiv.style.display = 'block';
+                previewDiv.style.display = 'none';
+                textarea.focus();
+            });
+            
+            async function getMarkdownPreview(text) {
+                try {
+                    const response = await fetch('/api/markdown-preview', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ text: text })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to get preview');
+                    }
+                    
+                    const data = await response.json();
+                    return data.html;
+                } catch (error) {
+                    console.error('Error getting preview:', error);
+                    return text; // Fallback to plain text
+                }
+            }
+            
+            previewBtn.addEventListener('click', async function() {
+                editorDiv.style.display = 'none';
+                previewDiv.style.display = 'block';
+                
+                // Get the preview HTML from the server
+                const html = await getMarkdownPreview(textarea.value);
+                previewContent.innerHTML = html;
+            });
+            
+            editBtn.addEventListener('click', function() {
+                previewDiv.style.display = 'none';
+                editorDiv.style.display = 'block';
+                textarea.focus();
+            });
+            
+            async function saveCommentary() {
+                const summaryId = window.location.search.match(/id=(\d+)/)?.[1];
+                if (!summaryId) {
+                    alert('Could not determine summary ID');
+                    return false;
+                }
+                
+                try {
+                    const response = await fetch(`/api/summary/${summaryId}/commentary`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({
+                            commentary: textarea.value
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            const error = await response.json();
+                            throw new Error(error.error || 'Unknown error');
+                        } else {
+                            throw new Error(`Server error: ${response.status}`);
+                        }
+                    }
+                    
+                    const data = await response.json();
+                    originalText = textarea.value;
+                    
+                    // Get the rendered HTML
+                    const html = await getMarkdownPreview(textarea.value);
+                    
+                    if (!textarea.value) {
+                        displayDiv.innerHTML = '<div class="commentary-placeholder">Click here to add a summary</div>';
+                        displayDiv.classList.add('empty');
+                    } else {
+                        const textDiv = document.createElement('div');
+                        textDiv.className = 'commentary-text';
+                        textDiv.innerHTML = html;
+                        displayDiv.innerHTML = '';
+                        displayDiv.appendChild(textDiv);
+                        displayDiv.classList.remove('empty');
+                    }
+                    
+                    displayDiv.style.display = 'block';
+                    editorDiv.style.display = 'none';
+                    previewDiv.style.display = 'none';
+                    
+                    return true;
+                } catch (error) {
+                    alert('Error saving commentary: ' + error.message);
+                    return false;
+                }
+            }
+            
+            saveBtn.addEventListener('click', saveCommentary);
+            savePreviewBtn.addEventListener('click', saveCommentary);
+            
+            cancelBtn.addEventListener('click', function() {
+                textarea.value = originalText;
+                displayDiv.style.display = 'block';
+                editorDiv.style.display = 'none';
+                previewDiv.style.display = 'none';
+            });
+        });
     </script>
 {% endif %}
 {% endblock %}

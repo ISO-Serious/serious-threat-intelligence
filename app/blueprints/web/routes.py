@@ -50,15 +50,18 @@ def get_email():
         if result:
             date_str = datetime.fromisoformat(result['date']).strftime('%A, %B %d, %Y')
             summary_dict = json.loads(result['summary'])
+            commentary = result.get('commentary')
             
             return render_template('email/summary.html', 
                                  summary=summary_dict,
-                                 date=date_str)
+                                 date=date_str,
+                                 commentary=commentary)
         else:
             return "Summary not found", 404
             
     except Exception as e:
-        import traceback
+        logger.error(f"Error generating email view: {str(e)}")
+        logger.exception(e)  # This will log the full stack trace
         return f"Error generating email view: {str(e)}", 500
 
 @web.route('/email2')
@@ -70,7 +73,10 @@ def get_email2():
         if result:
             date_str = datetime.fromisoformat(result['date']).strftime('%A, %B %d, %Y')
             summary_dict = json.loads(result['summary'])
-            return render_template('email2/email.html', summary=summary_dict, date=date_str)
+            return render_template('email2/email.html', 
+                                summary=summary_dict, 
+                                date=date_str,
+                                commentary=result.get('commentary'))
         return "Summary not found", 404
             
     except Exception as e:

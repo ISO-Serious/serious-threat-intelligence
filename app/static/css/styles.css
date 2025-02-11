@@ -272,3 +272,163 @@ body {
         width: 100%;
     }
 }
+.commentary-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.commentary-display {
+    min-height: 100px;
+    padding: 1rem;
+    border-radius: 6px;
+    background-color: var(--bg-color);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.commentary-display:hover {
+    background-color: #edf2f7;
+}
+
+.commentary-display.empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #718096;
+    font-style: italic;
+}
+
+.commentary-editor {
+    width: 100%;
+}
+
+.commentary-textarea {
+    width: 100%;
+    min-height: 150px;
+    padding: 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    font-family: inherit;
+    font-size: 1rem;
+    resize: vertical;
+}
+
+.commentary-textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.commentary-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+/* Add to your existing commentary styles in styles.css */
+
+.editor-help {
+    margin-bottom: 0.5rem;
+    color: #718096;
+}
+
+.commentary-preview {
+    width: 100%;
+}
+
+.preview-content {
+    padding: 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    min-height: 150px;
+    background-color: #f8fafc;
+}
+
+/* Markdown content styling */
+.commentary-text,
+.preview-content {
+    line-height: 1.6;
+}
+
+.commentary-text h1,
+.preview-content h1 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 1rem 0;
+}
+
+.commentary-text h2,
+.preview-content h2 {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin: 1rem 0;
+}
+
+.commentary-text h3,
+.preview-content h3 {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin: 1rem 0;
+}
+
+.commentary-text p,
+.preview-content p {
+    margin: 1rem 0;
+}
+
+.commentary-text ul,
+.preview-content ul {
+    list-style-type: disc;
+    margin: 1rem 0;
+    padding-left: 2rem;
+}
+
+.commentary-text ol,
+.preview-content ol {
+    list-style-type: decimal;
+    margin: 1rem 0;
+    padding-left: 2rem;
+}
+
+.commentary-text code,
+.preview-content code {
+    background-color: #f1f5f9;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+.commentary-text pre,
+.preview-content pre {
+    background-color: #f1f5f9;
+    padding: 1rem;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 1rem 0;
+}
+
+.commentary-text blockquote,
+.preview-content blockquote {
+    border-left: 4px solid #e2e8f0;
+    padding-left: 1rem;
+    margin: 1rem 0;
+    color: #4a5568;
+}

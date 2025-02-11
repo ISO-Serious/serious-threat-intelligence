@@ -9,6 +9,7 @@ from app.utils.auth import requires_auth
 import logging
 import json
 
+
 logger = logging.getLogger(__name__)
 api = Blueprint('api', __name__, url_prefix='/api')
 
@@ -124,4 +125,60 @@ def delete_task(summary_id):
             
     except Exception as e:
         logger.error(f"Error deleting task: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    
+@api.route('/summary/<int:summary_id>/commentary', methods=['POST'])
+@requires_auth
+def update_commentary(summary_id):
+    try:
+        logger.info(f"Received request to update commentary for summary {summary_id}")
+        if not request.is_json:
+            logger.error("Request is not JSON")
+            return jsonify({"error": "Content-Type must be application/json"}), 400
+            
+        data = request.get_json()
+        logger.info(f"Received data: {data}")
+        
+        if not isinstance(data, dict) or 'commentary' not in data:
+            logger.error("Invalid data format or missing commentary field")
+            return jsonify({"error": "Commentary field is required"}), 400
+            
+        summary = DailySummary.query.get_or_404(summary_id)
+        logger.info(f"Found summary with ID {summary_id}")
+        
+        summary.commentary = data['commentary']
+        logger.info(f"Set commentary to: {data['commentary']}")
+        
+        db.session.commit()
+        logger.info("Successfully committed to database")
+        
+        return jsonify({
+            "status": "success",
+            "commentary": summary.commentary
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error updating commentary: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    
+@api.route('/markdown-preview', methods=['POST'])
+@requires_auth
+def markdown_preview():
+    try:
+        if not request.is_json:
+            return jsonify({"error": "Content-Type must be application/json"}), 400
+            
+        data = request.get_json()
+        if 'text' not in data:
+            return jsonify({"error": "Text field is required"}), 400
+            
+        # Use the same markdown filter from __init__.py
+        html = current_app.jinja_env.filters['markdown'](data['text'])
+        
+        return jsonify({
+            "html": html
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error generating markdown preview: {str(e)}")
         return jsonify({"error": str(e)}), 500

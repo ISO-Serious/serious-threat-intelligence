@@ -26,6 +26,8 @@ img { border: 0; }
 .task-desc { font-size: 14px; color: #4a5568; }
 .insights { margin-top: 30px; padding: 30px; background: #ffffff; }
 .insight-title { font-size: 18px; color: #2c5282; margin-bottom: 15px; }
+.commentary { padding: 30px; background: #ffffff; }
+.commentary-content { font-size: 14px; color: #4a5568; line-height: 1.6; }
 </style>
 </head>
 <body>
@@ -50,6 +52,24 @@ img { border: 0; }
             </table>
           </td>
         </tr>
+        
+        <!-- Commentary Section (if exists) -->
+        {% if commentary %}
+        <tr>
+          <td class="commentary">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td>
+                  <div class="commentary-content">
+                    {{ commentary | markdown | safe }}
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        {% endif %}
+
         <!-- Critical Tasks -->
         <tr>
           <td class="task-section">

@@ -22,12 +22,13 @@ class Article(db.Model):
     summary = db.Column(db.Text)
     content = db.Column(db.Text)
     author = db.Column(db.String)
-
+    
 class DailySummary(db.Model):
     __tablename__ = 'daily_summaries'
     
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    date = db.Column(db.String, nullable=False)  # Keep as string for now
+    date = db.Column(db.String, nullable=False)
     summary = db.Column(db.JSON, nullable=False)
-    generated_at = db.Column(db.String, nullable=False)  # Keep as string
+    generated_at = db.Column(db.String, nullable=False)
     status = db.Column(db.String, nullable=False)
+    commentary = db.Column(db.Text)  # New 

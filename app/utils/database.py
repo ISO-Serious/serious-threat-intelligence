@@ -68,3 +68,25 @@ def get_recent_articles(limit=50):
         article.summary,
         article.published
     ) for article in articles]
+
+def get_summary_by_id(summary_id):
+    result = DailySummary.query.filter_by(id=summary_id, status='complete').first()
+    
+    if result:
+        try:
+            summary = result.summary if isinstance(result.summary, dict) else parse_double_encoded_json(result.summary)
+            return {
+                'summary': json.dumps(summary),
+                'date': result.date,
+                'generated_at': result.generated_at,
+                'commentary': result.commentary
+            }
+        except Exception as e:
+            logger.error(f"Error parsing summary: {str(e)}")
+            return {
+                'summary': json.dumps(result.summary),
+                'date': result.date,
+                'generated_at': result.generated_at,
+                'commentary': result.commentary
+            }
+    return None
