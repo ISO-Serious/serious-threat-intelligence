@@ -20,9 +20,12 @@
             {% for category, content in summary.items() %}
                 {% if content.actionable_tasks %}
                     {% for task in content.actionable_tasks %}
-                        <div class="task-item {% if 'Update' in task.task or 'Critical' in task.description %}urgent{% endif %}">
+                        <div class="task-item {% if 'Update' in task.task or 'Critical' in task.description %}urgent{% endif %}" 
+                             data-category="{{ category }}" 
+                             data-task-index="{{ loop.index0 }}">
                             <div class="task-header">
                                 <strong>{{ task.task }}</strong>
+                                <button class="delete-task" title="Delete task">×</button>
                             </div>
                             <div class="task-description">{{ task.description }}</div>
                         </div>
@@ -47,5 +50,72 @@
             {% endif %}
         {% endfor %}
     </div>
+
+    <!-- Confirmation Dialog -->
+    <div id="deleteConfirmDialog" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Confirm Deletion</h3>
+            <p>Are you sure you want to delete this task?</p>
+            <div class="modal-actions">
+                <button id="confirmDelete" class="btn-danger">Delete</button>
+                <button id="cancelDelete" class="btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dialog = document.getElementById('deleteConfirmDialog');
+        const confirmBtn = document.getElementById('confirmDelete');
+        const cancelBtn = document.getElementById('cancelDelete');
+        let currentTaskElement = null;
+
+        // Handle delete button clicks
+        document.querySelectorAll('.delete-task').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.stopPropagation();
+                currentTaskElement = this.closest('.task-item');
+                dialog.style.display = 'block';
+            });
+        });
+
+        // Handle confirmation
+        confirmBtn.addEventListener('click', async function() {
+            if (currentTaskElement) {
+                const category = currentTaskElement.dataset.category;
+                const taskIndex = currentTaskElement.dataset.taskIndex;
+                const summaryId = window.location.search.match(/id=(\d+)/)?.[1];
+
+                try {
+                    const response = await fetch(`/api/summary/${summaryId}/task?category=${encodeURIComponent(category)}&task_index=${taskIndex}`, {
+                        method: 'DELETE',
+                    });
+
+                    if (response.ok) {
+                        currentTaskElement.remove();
+                    } else {
+                        const error = await response.json();
+                        alert('Error deleting task: ' + (error.error || 'Unknown error'));
+                    }
+                } catch (error) {
+                    alert('Error deleting task: ' + error.message);
+                }
+            }
+            dialog.style.display = 'none';
+        });
+
+        // Handle cancellation
+        cancelBtn.addEventListener('click', function() {
+            dialog.style.display = 'none';
+        });
+
+        // Close dialog when clicking outside
+        window.addEventListener('click', function(e) {
+            if (e.target === dialog) {
+                dialog.style.display = 'none';
+            }
+        });
+    });
+    </script>
 {% endif %}
 {% endblock %}

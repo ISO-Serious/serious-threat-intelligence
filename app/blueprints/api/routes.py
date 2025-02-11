@@ -1,13 +1,15 @@
-from flask import Blueprint, jsonify, current_app
+from flask import Blueprint, jsonify, current_app, request
 import os
 import sqlite3
+import json
 from app.utils.process import run_script_async
-from app.utils.database import get_latest_summary, get_summary_by_id
+from app.utils.database import get_latest_summary, get_summary_by_id, parse_double_encoded_json
 from app.utils.auth import requires_auth
 import logging
 
 logger = logging.getLogger(__name__)
 api = Blueprint('api', __name__, url_prefix='/api')
+
 @api.route('/collect-feeds', methods=['POST'])
 @requires_auth
 def collect_feeds():
@@ -93,3 +95,70 @@ def delete_article(id):
     except Exception as e:
         logger.error(f"Error deleting article: {str(e)}")
         return f"Error deleting article: {str(e)}", 500
+    
+@api.route('/summary/<int:summary_id>/task', methods=['DELETE'])
+@requires_auth
+def delete_task(summary_id):
+    # Validate input parameters first
+    category = request.args.get('category')
+    task_index = request.args.get('task_index', type=int)
+    
+    if category is None or task_index is None:
+        return jsonify({"error": "Category and task_index are required"}), 400
+
+    conn = None    
+    try:
+        # Establish database connection
+        conn = sqlite3.connect(current_app.config['DATABASE_PATH'])
+        c = conn.cursor()
+        
+        # Get the current summary
+        result = c.execute('''
+            SELECT summary
+            FROM daily_summaries 
+            WHERE id = ? AND status = 'complete'
+        ''', (summary_id,)).fetchone()
+        
+        if not result:
+            if conn:
+                conn.close()
+            return jsonify({"error": "Summary not found"}), 404
+            
+        # Parse the summary JSON
+        try:
+            summary = parse_double_encoded_json(result[0])
+        except Exception as e:
+            logger.error(f"Error parsing summary: {str(e)}")
+            if conn:
+                conn.close()
+            return jsonify({"error": "Error parsing summary"}), 500
+            
+        # Remove the task
+        if category not in summary or 'actionable_tasks' not in summary[category]:
+            if conn:
+                conn.close()
+            return jsonify({"error": "Category not found or no tasks available"}), 404
+            
+        if task_index < 0 or task_index >= len(summary[category]['actionable_tasks']):
+            if conn:
+                conn.close()
+            return jsonify({"error": "Task index out of range"}), 400
+            
+        # Delete the task and update the database
+        del summary[category]['actionable_tasks'][task_index]
+        
+        c.execute('''
+            UPDATE daily_summaries
+            SET summary = ?
+            WHERE id = ?
+        ''', (json.dumps(summary), summary_id))
+        
+        conn.commit()
+        conn.close()
+        return '', 204
+            
+    except Exception as e:
+        logger.error(f"Error deleting task: {str(e)}")
+        if conn:
+            conn.close()
+        return jsonify({"error": str(e)}), 500
