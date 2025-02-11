@@ -1,13 +1,14 @@
 from datetime import datetime, timezone, timedelta
-import sqlite3
 import logging
 import anthropic
 import json
-import re
 import os
 from pathlib import Path
 import argparse
 from prompts import ARTICLE_SUMMARY_PROMPT
+from db_helper import get_db
+from app.models import Feed, Article, DailySummary
+import time
 
 # Set up logging
 logging.basicConfig(
@@ -19,24 +20,6 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
-
-# Configure SQLite to properly handle datetime objects
-def adapt_datetime(dt):
-    """Convert datetime objects to SQLite TEXT format."""
-    return dt.isoformat()
-
-def convert_datetime(text):
-    """Convert SQLite TEXT format back to datetime objects."""
-    if isinstance(text, bytes):
-        text = text.decode('utf-8')
-    try:
-        return datetime.fromisoformat(text)
-    except ValueError:
-        return text
-
-# Register the datetime adapters with SQLite
-sqlite3.register_adapter(datetime, adapt_datetime)
-sqlite3.register_converter("timestamp", convert_datetime)
 
 class ArticleSummarizer:
     def __init__(self, api_key):
@@ -55,10 +38,10 @@ class ArticleSummarizer:
         article_texts = []
         for article in articles[:20]:
             article_text = f"""
-Title: {article['title']}
-URL: {article['url']}
-Author: {article.get('author', 'Unknown')}
-Summary: {article['summary']}
+Title: {article.title}
+URL: {article.url}
+Author: {article.author or 'Unknown'}
+Summary: {article.summary}
             """
             article_texts.append(article_text)
         
@@ -76,10 +59,8 @@ Summary: {article['summary']}
                 messages=[{"role": "user", "content": prompt}]
             )
             
-            # Get the response content directly from the TextBlock
             response_text = response.content[0].text
             
-            # Parse the JSON
             try:
                 summary_dict = json.loads(response_text)
                 logger.info(f"Successfully parsed summary for {category}")
@@ -87,7 +68,6 @@ Summary: {article['summary']}
             except json.JSONDecodeError as e:
                 logger.error(f"Failed to parse JSON from Claude response for {category}: {str(e)}")
                 logger.error(f"Raw text: {response_text[:200]}...")
-                # Return structured error response
                 return {
                     "section_title": f"Error Processing {category}",
                     "summary": "Error parsing AI-generated summary. Please check the original articles.",
@@ -103,62 +83,37 @@ Summary: {article['summary']}
             }
 
 class FeedSummarizer:
-    def __init__(self, db_path: str, summarizer: ArticleSummarizer):
-        self.db_path = db_path
+    def __init__(self, summarizer: ArticleSummarizer):
         self.summarizer = summarizer
-        
-        if not Path(db_path).exists():
-            raise FileNotFoundError(
-                f"Database not found at {db_path}. Please run the setup.py script first."
-            )
+        self.app, self.db = get_db()
+        self.app.app_context().push()
 
     def generate_daily_summary(self) -> dict:
-        """Generate an AI-powered summary of articles from the past 24 hours."""
-        conn = None
         try:
-            conn = sqlite3.connect(self.db_path, detect_types=sqlite3.PARSE_DECLTYPES)
-            c = conn.cursor()
+            today = datetime.now(timezone.utc).date().isoformat()
+            twelve_hours_ago = (datetime.now(timezone.utc) - timedelta(hours=12)).isoformat()
             
-            today = datetime.now(timezone.utc).date()
-            yesterday = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
-            
-            # Use json() function to properly extract JSON data
-            existing_summary = c.execute('''
-                SELECT json(summary) FROM daily_summaries
-                WHERE date = ? AND generated_at > ?
-                AND status = 'complete'
-            ''', (today.isoformat(), (datetime.now(timezone.utc) - timedelta(hours=12)).isoformat())).fetchone()
+            # Now both date and generated_at are compared as strings
+            existing_summary = DailySummary.query.filter(
+                DailySummary.date == today,
+                DailySummary.generated_at > twelve_hours_ago,
+                DailySummary.status == 'complete'
+            ).first()
             
             if existing_summary:
-                # Result is already parsed JSON due to json() function
-                return existing_summary[0]
+                return json.loads(existing_summary.summary)
             
-            articles = c.execute('''
-                SELECT 
-                    f.category,
-                    a.title,
-                    a.url,
-                    a.published,
-                    COALESCE(NULLIF(a.summary, ''), a.content, 'No content available') as content,
-                    a.author
-                FROM articles a
-                JOIN feeds f ON a.feed_id = f.id
-                WHERE a.published > ?
-                ORDER BY f.category, a.published DESC
-            ''', (yesterday,)).fetchall()
+            yesterday = datetime.now(timezone.utc) - timedelta(days=1)
+            articles = Article.query.join(Feed).filter(
+                Article.published > yesterday
+            ).order_by(Feed.category, Article.published.desc()).all()
             
             categorized_articles = {}
-            for category, title, url, published, content, author in articles:
+            for article in articles:
+                category = article.feed.category
                 if category not in categorized_articles:
                     categorized_articles[category] = []
-                
-                categorized_articles[category].append({
-                    'title': title,
-                    'url': url,
-                    'published': published,
-                    'summary': content,
-                    'author': author
-                })
+                categorized_articles[category].append(article)
             
             summary_content = {}
             for category, articles in categorized_articles.items():
@@ -166,38 +121,30 @@ class FeedSummarizer:
                     articles, category
                 )
             
-            current_time = datetime.now(timezone.utc)
+            current_time = datetime.now(timezone.utc).isoformat()
             
-            # Store the summary as proper JSON using json() function
-            c.execute('''
-                INSERT INTO daily_summaries (date, summary, generated_at, status)
-                VALUES (?, json(?), ?, ?)
-            ''', (
-                today.isoformat(),
-                json.dumps(summary_content, ensure_ascii=False),
-                current_time.isoformat(),
-                'complete'
-            ))
+            # Store everything as strings
+            new_summary = DailySummary(
+                date=today,
+                summary=json.dumps(summary_content, ensure_ascii=False),
+                generated_at=current_time,
+                status='complete'
+            )
             
-            conn.commit()
+            self.db.session.add(new_summary)
+            self.db.session.commit()
+            
             return summary_content
             
         except Exception as e:
             logger.error(f"Error generating daily summary: {str(e)}")
-            if conn:
-                conn.rollback()
+            self.db.session.rollback()
             raise
-            
-        finally:
-            if conn:
-                conn.close()
 
 def main():
     """Main entry point for generating the daily feed summary."""
     parser = argparse.ArgumentParser(description='RSS Feed Summarizer')
     
-    parser.add_argument('--db', default='../rss_feeds.db',
-                       help='Database file path (default: rss_feeds.db)')
     parser.add_argument('--api-key', required=False,
                        help='Claude API key for generating summaries')
     parser.add_argument('--interval', type=int, default=86400,
@@ -209,17 +156,13 @@ def main():
     
     try:
         while True:
-            db_path = os.getenv('DATABASE_PATH') or args.db
             api_key = os.getenv('CLAUDE_API_KEY') or args.api_key
             if not api_key:
                 raise ValueError("API key not found in CLAUDE_API_KEY environment variable or --api-key argument")
                 
             summarizer = ArticleSummarizer(api_key=api_key)
-            feed_summarizer = FeedSummarizer(db_path, summarizer)
+            feed_summarizer = FeedSummarizer(summarizer)
             summary = feed_summarizer.generate_daily_summary()
-            
-            # Print summary to stdout for potential piping to other processes
-            # print(json.dumps(summary, indent=2))
             
             if args.cron:
                 logger.info("Running in cron mode - exiting after single execution")
