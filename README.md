@@ -7,3 +7,5 @@
 4. Add startups and scale-ups to prompt
 5. ~~Update branding~~
 6. Allow for users to select technologies
+7. ~~Migrate to Postgresql~~
+8. ~~Add free-form, markdown commentary box~~
