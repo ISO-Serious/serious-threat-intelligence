@@ -42,6 +42,21 @@ def generate_summary():
     except Exception as e:
         logger.error(f"Failed to start summary generation: {str(e)}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
+    
+@api.route('/generate-weekly', methods=['POST'])
+@requires_auth
+def generate_summary():
+    try:
+        if not os.getenv('DATABASE_URL') or not os.getenv('CLAUDE_API_KEY'):
+            return jsonify({'status': 'error', 'message': 'Required env vars not set'}), 500
+            
+        script_path = os.path.join(current_app.root_path, '..', 'cron', 'feed_summary.py')
+        pid = run_script_async(script_path, ['--cron', '--summary_period', '7'])
+        return jsonify({'status': 'success', 'process_id': pid}), 202
+        
+    except Exception as e:
+        logger.error(f"Failed to start summary generation: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500    
 
 @api.route('/check-process/<int:pid>', methods=['GET'])
 @requires_auth
