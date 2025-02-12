@@ -14,7 +14,29 @@ def strip_html(text):
 
 @web.route('/')
 def index():
-    return "Hello World", 200
+    try:
+        summary_id = request.args.get('id')
+        
+        result = get_summary_by_id(summary_id) if summary_id else get_latest_summary()
+        
+        if result:
+            date_str = datetime.fromisoformat(result['date']).strftime('%A, %B %d, %Y')
+            summary_dict = json.loads(result['summary'])
+            commentary = result.get('commentary')
+            summary_type = result.get('summary_type')
+            
+            return render_template('email/summary.html', 
+                                 summary=summary_dict,
+                                 date=date_str,
+                                 commentary=commentary,
+                                 summary_type=summary_type)
+        else:
+            return "Summary not found", 404
+            
+    except Exception as e:
+        logger.error(f"Error generating email view: {str(e)}")
+        logger.exception(e)  # This will log the full stack trace
+        return f"Error generating email view: {str(e)}", 500
 
 @web.route('/health')
 def health_check():
@@ -48,7 +70,6 @@ def list_emails():
         return f"Error listing summaries: {str(e)}", 500
     
 @web.route('/email')
-@requires_auth
 def get_email():
     try:
         summary_id = request.args.get('id')
@@ -59,12 +80,13 @@ def get_email():
             date_str = datetime.fromisoformat(result['date']).strftime('%A, %B %d, %Y')
             summary_dict = json.loads(result['summary'])
             commentary = result.get('commentary')
+            summary_type = result.get('summary_type')
             
             return render_template('email/summary.html', 
                                  summary=summary_dict,
                                  date=date_str,
-                                 commentary=commentary)
-        else:
+                                 commentary=commentary,
+                                 summary_type=summary_type)
             return "Summary not found", 404
             
     except Exception as e:

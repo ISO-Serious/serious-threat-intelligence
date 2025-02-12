@@ -7,7 +7,7 @@ import json
 logger = logging.getLogger(__name__)
 
 def get_latest_summary():
-    result = DailySummary.query.filter_by(status='complete')\
+    result = DailySummary.query.filter_by(status='complete', summary_type='weekly')\
         .order_by(DailySummary.generated_at.desc())\
         .first()
     

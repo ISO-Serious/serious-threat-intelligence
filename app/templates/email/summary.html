@@ -4,7 +4,7 @@
 <div class="header">
     <div class="header-content">
         <div class="header-text">
-            <h1>Serious Intelligence</h1>
+            <h1>Serious Intelligence {{ summary_type | capitalize }}</h1>
             <div class="date">{{ date }}</div>
         </div>
         <div class="logo">
@@ -12,6 +12,8 @@
         </div>
     </div>
 </div>
+
+{% if session.get('authenticated') %}
 <div class="commentary-section">
     <div id="commentary-display" class="commentary-display {% if not commentary %}empty{% endif %}">
         {% if commentary %}
@@ -39,6 +41,13 @@
         </div>
     </div>
 </div>
+{% else %}
+<div class="commentary-section">
+    {% if commentary %}
+        <div class="commentary-text">{{ commentary | markdown | safe }}</div>
+    {% endif %}
+</div>
+{% endif %}
 
 {% if summary is mapping %}
     <div class="quick-actions">
@@ -52,7 +61,9 @@
                              data-task-index="{{ loop.index0 }}">
                             <div class="task-header">
                                 <strong>{{ task.task }}</strong>
+                                {% if session.get('authenticated') %}
                                 <button class="delete-task" title="Delete task">×</button>
+                                {% endif %}
                             </div>
                             <div class="task-description">{{ task.description }}</div>
                         </div>
@@ -66,22 +77,23 @@
         {% for category, content in summary.items() %}
             {% if content.get('section_title') and content.get('section_title') != 'No Summary Available' %}
             <div class="category">
-            <div class="category-header">
-                <h3>{{ content.get('section_title', 'No Title') }}</h3>
-                <span class="context-tag">{{ category }}</span>
-            </div>
-            <div class="summary-content markdown-content">
-                {% if content.get('summary') %}
-                {{ content.summary | markdown | safe }}
-                {% else %}
-                <p>No summary available for this section.</p>
-                {% endif %}
-            </div>
+                <div class="category-header">
+                    <h3>{{ content.get('section_title', 'No Title') }}</h3>
+                    <span class="context-tag">{{ category }}</span>
+                </div>
+                <div class="summary-content markdown-content">
+                    {% if content.get('summary') %}
+                    {{ content.summary | markdown | safe }}
+                    {% else %}
+                    <p>No summary available for this section.</p>
+                    {% endif %}
+                </div>
             </div>
             {% endif %}
         {% endfor %}
     </div>
 
+    {% if session.get('authenticated') %}
     <!-- Confirmation Dialog -->
     <div id="deleteConfirmDialog" class="modal" style="display: none;">
         <div class="modal-content">
@@ -278,5 +290,6 @@
             });
         });
     </script>
+    {% endif %}
 {% endif %}
 {% endblock %}
