@@ -63,6 +63,10 @@ def create_app(config_name):
     app.register_blueprint(auth)
     app.register_blueprint(api)
     app.register_blueprint(web)
+
+    # Register CLI commands
+    from app.commands import create_admin_command
+    app.cli.add_command(create_admin_command)
     
     return app
 

@@ -90,6 +90,32 @@ def logout():
         session.pop('auth_token', None)
     return redirect(url_for('auth.login'))
 
+@auth.route('/admin')
+@admin_required
+def admin_dashboard():
+    """Admin dashboard showing system overview."""
+    from app.models import Article, DailySummary
+    from datetime import datetime, timedelta
+    
+    # Get recent collection stats
+    recent_time = datetime.utcnow() - timedelta(hours=24)
+    articles_count = Article.query.filter(Article.published >= recent_time).count()
+    latest_article = Article.query.order_by(Article.published.desc()).first()
+    last_collection_time = latest_article.published if latest_article else None
+
+    # Get summary stats
+    summaries_count = DailySummary.query.filter_by(status='complete').count()
+    latest_summary = DailySummary.query.filter_by(status='complete')\
+        .order_by(DailySummary.generated_at.desc()).first()
+    last_summary_time = latest_summary.generated_at if latest_summary else None
+    
+    return render_template('admin/dashboard.html',
+        articles_count=articles_count,
+        last_collection_time=last_collection_time,
+        summaries_count=summaries_count,
+        last_summary_time=last_summary_time
+    )
+
 @auth.route('/admin/users')
 @admin_required
 def admin_users():
@@ -201,10 +227,12 @@ def list_sessions():
     # Clean up expired sessions first
     UserSession.cleanup_expired()
     
+    # Get all active sessions with user information
     sessions = UserSession.query.filter_by(is_active=True)\
         .join(User)\
         .add_columns(
             User.username,
+            UserSession.id,
             UserSession.created_at,
             UserSession.expires_at,
             UserSession.ip_address,
@@ -212,3 +240,13 @@ def list_sessions():
         ).all()
     
     return render_template('admin/sessions.html', sessions=sessions)
+
+@auth.route('/sessions/<session_id>/revoke', methods=['POST'])
+@admin_required
+def revoke_session(session_id):
+    """Revoke a specific session"""
+    user_session = UserSession.query.get_or_404(session_id)
+    user_session.deactivate()
+    
+    flash('Session revoked successfully', 'success')
+    return redirect(url_for('auth.list_sessions'))

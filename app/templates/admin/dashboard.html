@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header">
+    <div class="header-content">
+        <div class="header-text">
+            <h1>Admin Dashboard</h1>
+        </div>
+    </div>
+</div>
+
+<div class="insights">
+    <div class="category">
+        <div class="category-header">
+            <h3>User Management</h3>
+        </div>
+        <div class="priority-tasks">
+            <div class="task-item">
+                <div class="task-header">
+                    <strong>Manage Users</strong>
+                </div>
+                <div class="task-description" style="margin-bottom: 1.5rem;">
+                    Create, edit, and manage user accounts and permissions.
+                </div>
+                <div style="margin-top: auto;">
+                    <a href="{{ url_for('auth.admin_users') }}" class="btn-primary">View Users</a>
+                </div>
+            </div>
+
+            <div class="task-item">
+                <div class="task-header">
+                    <strong>Active Sessions</strong>
+                </div>
+                <div class="task-description" style="margin-bottom: 1.5rem;">
+                    Monitor and manage active user sessions.
+                </div>
+                <div style="margin-top: auto;">
+                    <a href="{{ url_for('auth.list_sessions') }}" class="btn-primary">View Sessions</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="category">
+        <div class="category-header">
+            <h3>Content Management</h3>
+        </div>
+        <div class="priority-tasks">
+            <div class="task-item">
+                <div class="task-header">
+                    <strong>Generate Reports</strong>
+                </div>
+                <div class="task-description" style="margin-bottom: 1.5rem;">
+                    Generate daily or weekly intelligence summaries.
+                </div>
+                <div style="margin-top: auto;">
+                    <a href="{{ url_for('web.list_emails') }}" class="btn-primary">Manage Reports</a>
+                </div>
+            </div>
+
+            <div class="task-item">
+                <div class="task-header">
+                    <strong>Feed Management</strong>
+                </div>
+                <div class="task-description" style="margin-bottom: 1.5rem;">
+                    Configure and manage RSS feed sources.
+                </div>
+                <div style="margin-top: auto;">
+                    <a href="{{ url_for('web.list_emails') }}" class="btn-primary">Manage Feeds</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="category">
+        <div class="category-header">
+            <h3>System Status</h3>
+        </div>
+        <div class="priority-tasks">
+            <div class="task-item">
+                <div class="task-header">
+                    <strong>Collection Status</strong>
+                </div>
+                <div class="task-description">
+                    Recent feed collection activity:
+                </div>
+                <div class="mt-2" style="margin-bottom: 0.5rem;">
+                    <div>Last Collection: {{ last_collection_time|default('Unknown', true) }}</div>
+                    <div>Articles Collected: {{ articles_count|default('0', true) }}</div>
+                </div>
+            </div>
+
+            <div class="task-item">
+                <div class="task-header">
+                    <strong>Summary Status</strong>
+                </div>
+                <div class="task-description">
+                    Recent summary generation activity:
+                </div>
+                <div class="mt-2" style="margin-bottom: 0.5rem;">
+                    <div>Last Summary: {{ last_summary_time|default('Unknown', true) }}</div>
+                    <div>Total Summaries: {{ summaries_count|default('0', true) }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
