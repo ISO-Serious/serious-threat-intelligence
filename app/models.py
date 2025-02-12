@@ -14,7 +14,7 @@ class Feed(db.Model):
 class Article(db.Model):
     __tablename__ = 'articles'
     
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # Add autoincrement
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     feed_id = db.Column(db.Integer, db.ForeignKey('feeds.id'))
     title = db.Column(db.String)
     url = db.Column(db.String, unique=True)
@@ -31,4 +31,5 @@ class DailySummary(db.Model):
     summary = db.Column(db.JSON, nullable=False)
     generated_at = db.Column(db.String, nullable=False)
     status = db.Column(db.String, nullable=False)
-    commentary = db.Column(db.Text)  # New 
+    commentary = db.Column(db.Text)
+    summary_type = db.Column(db.String, nullable=False, default='daily')  # Options: 'daily' or 'weekly'

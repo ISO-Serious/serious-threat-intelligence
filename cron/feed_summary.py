@@ -5,7 +5,7 @@ import json
 import os
 from pathlib import Path
 import argparse
-from prompts import ARTICLE_SUMMARY_PROMPT
+from prompts import ARTICLE_SUMMARY_PROMPT, WEEKLY_SUMMARY_PROMPT
 from db_helper import get_db
 from app.models import Feed, Article, DailySummary
 import time
@@ -27,7 +27,7 @@ class ArticleSummarizer:
             api_key=api_key
         )
 
-    def generate_summary(self, articles, category):
+    def generate_summary(self, articles, category, period_days=1):
         if not articles:
             return {
                 "section_title": "No Summary Available",
@@ -45,7 +45,9 @@ Summary: {article.summary}
             """
             article_texts.append(article_text)
         
-        prompt = ARTICLE_SUMMARY_PROMPT.format(
+        # Choose appropriate prompt based on period
+        prompt = WEEKLY_SUMMARY_PROMPT if period_days >= 7 else ARTICLE_SUMMARY_PROMPT
+        prompt = prompt.format(
             category=category,
             articles=chr(10).join(article_texts)
         )
@@ -89,9 +91,9 @@ class FeedSummarizer:
         self.app.app_context().push()
 
     def cleanup_old_articles(self):
-        """Delete articles that are older than 3 days."""
+        """Delete articles that are older than 10 days."""
         try:
-            cutoff_date = datetime.now(timezone.utc) - timedelta(days=3)
+            cutoff_date = datetime.now(timezone.utc) - timedelta(days=10)
             old_articles = Article.query.filter(Article.published < cutoff_date).all()
             
             if old_articles:
@@ -100,36 +102,39 @@ class FeedSummarizer:
                     self.db.session.delete(article)
                 
                 self.db.session.commit()
-                logger.info(f"Successfully deleted {count} articles older than 3 days")
+                logger.info(f"Successfully deleted {count} articles older than 10 days")
             else:
-                logger.info("No articles found older than 3 days")
+                logger.info("No articles found older than 10 days")
                 
         except Exception as e:
             logger.error(f"Error cleaning up old articles: {str(e)}")
             self.db.session.rollback()
             raise
 
-    def generate_daily_summary(self) -> dict:
+    def generate_daily_summary(self, summary_period=1) -> dict:
         try:
             # Clean up old articles before generating new summary
             self.cleanup_old_articles()
             
             today = datetime.now(timezone.utc).date().isoformat()
-            twelve_hours_ago = (datetime.now(timezone.utc) - timedelta(hours=12)).isoformat()
+            period_ago = (datetime.now(timezone.utc) - timedelta(hours=24 * summary_period)).isoformat()
+            current_summary_type = 'weekly' if summary_period >= 7 else 'daily'
             
-            # Now both date and generated_at are compared as strings
+            # Check for existing summary in the last period, including summary_type
             existing_summary = DailySummary.query.filter(
                 DailySummary.date == today,
-                DailySummary.generated_at > twelve_hours_ago,
-                DailySummary.status == 'complete'
+                DailySummary.generated_at > period_ago,
+                DailySummary.status == 'complete',
+                DailySummary.summary_type == current_summary_type
             ).first()
             
             if existing_summary:
                 return json.loads(existing_summary.summary)
             
-            yesterday = datetime.now(timezone.utc) - timedelta(days=1)
+            # Get articles from the specified period
+            time_threshold = datetime.now(timezone.utc) - timedelta(days=summary_period)
             articles = Article.query.join(Feed).filter(
-                Article.published > yesterday
+                Article.published > time_threshold
             ).order_by(Feed.category, Article.published.desc()).all()
             
             categorized_articles = {}
@@ -142,7 +147,7 @@ class FeedSummarizer:
             summary_content = {}
             for category, articles in categorized_articles.items():
                 summary_content[category] = self.summarizer.generate_summary(
-                    articles, category
+                    articles, category, period_days=summary_period
                 )
             
             current_time = datetime.now(timezone.utc).isoformat()
@@ -152,7 +157,8 @@ class FeedSummarizer:
                 date=today,
                 summary=json.dumps(summary_content, ensure_ascii=False),
                 generated_at=current_time,
-                status='complete'
+                status='complete',
+                summary_type=current_summary_type
             )
             
             self.db.session.add(new_summary)
@@ -175,6 +181,8 @@ def main():
                        help='Run interval in seconds (default: 86400 for 24 hours)')
     parser.add_argument('--cron', action='store_true',
                        help='Run once and exit (for cron jobs)')
+    parser.add_argument('--summary_period', type=int, choices=[1, 7], default=1,
+                       help='Period to summarize in days (1 or 7, default: 1)')
     
     args = parser.parse_args()
     
@@ -186,7 +194,7 @@ def main():
                 
             summarizer = ArticleSummarizer(api_key=api_key)
             feed_summarizer = FeedSummarizer(summarizer)
-            summary = feed_summarizer.generate_daily_summary()
+            summary = feed_summarizer.generate_daily_summary(summary_period=args.summary_period)
             
             if args.cron:
                 logger.info("Running in cron mode - exiting after single execution")

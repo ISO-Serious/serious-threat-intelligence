@@ -432,3 +432,145 @@ body {
     margin: 1rem 0;
     color: #4a5568;
 }
+/* Table styles */
+.content-table {
+    width: 100%;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    border-collapse: collapse;
+}
+
+.content-table thead {
+    background-color: #f8fafc;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.content-table th {
+    color: #4a5568;
+    font-weight: 600;
+    padding: 1rem;
+    text-align: left;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.content-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    color: #2d3748;
+    vertical-align: middle;
+}
+
+.content-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.content-table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+/* Summary type badges */
+.summary-type-badge {
+    padding: 0.375rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.025em;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+.summary-type-badge.daily {
+    background-color: #ebf5ff;
+    color: #1a56db;
+}
+
+.summary-type-badge.weekly {
+    background-color: #f3e8ff;
+    color: #6b21a8;
+}
+
+/* Action buttons */
+.table-action-btn {
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.table-action-btn:hover {
+    background-color: #f3f4f6;
+}
+
+.table-action-btn.delete {
+    color: var(--danger-color);
+}
+
+.table-action-btn.delete:hover {
+    background-color: #fee2e2;
+}
+
+/* Links in tables */
+.table-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.table-link:hover {
+    color: var(--secondary-color);
+    text-decoration: underline;
+}
+
+/* Commentary cell */
+.commentary-cell {
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #4a5568;
+    font-style: italic;
+}
+
+/* Summary actions cell */
+.summary-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+/* Article summary cell */
+.article-summary {
+    max-width: 400px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #4a5568;
+}
+
+/* Date column */
+.date-column {
+    white-space: nowrap;
+    color: #4a5568;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .content-table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .commentary-cell,
+    .article-summary {
+        max-width: 200px;
+    }
+}

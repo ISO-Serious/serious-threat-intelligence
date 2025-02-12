@@ -24,21 +24,29 @@ def health_check():
 @requires_auth
 def list_emails():
     try:
-        # Remove DATABASE_PATH as it's no longer needed
         summaries = get_all_summary_dates()
         articles = get_recent_articles()
+        
+        formatted_summaries = [
+            (id, 
+             datetime.fromisoformat(date).strftime('%A, %B %d, %Y'),
+             (summary_type or 'daily').capitalize(),
+             commentary) # Include commentary in the tuple
+            for id, date, summary_type, commentary in summaries
+        ]
+        
         return render_template(
             'email/list.html',
-            summaries=[(id, datetime.fromisoformat(date).strftime('%A, %B %d, %Y')) 
-                      for id, date in summaries],
+            summaries=formatted_summaries,
             articles=[(article[0], article[1], article[2], strip_html(article[3]), 
                       datetime.fromisoformat(str(article[4])).strftime('%B %d, %Y'))
                      for article in articles]
         )
     except Exception as e:
         logger.error(f"Error listing summaries: {str(e)}")
+        logger.exception("Full traceback:")
         return f"Error listing summaries: {str(e)}", 500
-
+    
 @web.route('/email')
 @requires_auth
 def get_email():

@@ -17,14 +17,18 @@ def get_latest_summary():
             return {
                 'summary': json.dumps(summary),
                 'date': result.date,
-                'generated_at': result.generated_at
+                'generated_at': result.generated_at,
+                'commentary': result.commentary,
+                'summary_type': result.summary_type
             }
         except Exception as e:
             logger.error(f"Error parsing summary: {str(e)}")
             return {
                 'summary': json.dumps(result.summary),
                 'date': result.date,
-                'generated_at': result.generated_at
+                'generated_at': result.generated_at,
+                'commentary': result.commentary,
+                'summary_type': result.summary_type
             }
     return None
 
@@ -37,23 +41,33 @@ def get_summary_by_id(summary_id):
             return {
                 'summary': json.dumps(summary),
                 'date': result.date,
-                'generated_at': result.generated_at
+                'generated_at': result.generated_at,
+                'commentary': result.commentary,
+                'summary_type': result.summary_type
             }
         except Exception as e:
             logger.error(f"Error parsing summary: {str(e)}")
             return {
                 'summary': json.dumps(result.summary),
                 'date': result.date,
-                'generated_at': result.generated_at
+                'generated_at': result.generated_at,
+                'commentary': result.commentary,
+                'summary_type': result.summary_type
             }
     return None
 
 def get_all_summary_dates():
     results = DailySummary.query.filter_by(status='complete')\
         .order_by(DailySummary.date.desc())\
-        .with_entities(DailySummary.id, DailySummary.date)\
+        .add_columns(
+            DailySummary.id,
+            DailySummary.date,
+            DailySummary.summary_type,
+            DailySummary.commentary
+        )\
         .all()
-    return results
+    
+    return [(row[1], row[2], row[3], row[4]) for row in results]
 
 def get_recent_articles(limit=50):
     articles = Article.query\
@@ -68,25 +82,3 @@ def get_recent_articles(limit=50):
         article.summary,
         article.published
     ) for article in articles]
-
-def get_summary_by_id(summary_id):
-    result = DailySummary.query.filter_by(id=summary_id, status='complete').first()
-    
-    if result:
-        try:
-            summary = result.summary if isinstance(result.summary, dict) else parse_double_encoded_json(result.summary)
-            return {
-                'summary': json.dumps(summary),
-                'date': result.date,
-                'generated_at': result.generated_at,
-                'commentary': result.commentary
-            }
-        except Exception as e:
-            logger.error(f"Error parsing summary: {str(e)}")
-            return {
-                'summary': json.dumps(result.summary),
-                'date': result.date,
-                'generated_at': result.generated_at,
-                'commentary': result.commentary
-            }
-    return None

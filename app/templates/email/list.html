@@ -13,49 +13,81 @@
 <div class="category">
     <h2>Available Reports</h2>
     <div class="markdown-content">
-        <ul>
-        {% for id, date in summaries %}
-            <li class="flex justify-between items-center py-2">
-                <a href="{{ url_for('web.get_email', id=id) }}">{{ date }}</a> |  <a href="{{ url_for('web.get_email2', id=id) }}">Email Formatted</a>
-                <button 
-                    onclick="showDeleteConfirm('summary', {{ id }}, '{{ date }}')"
-                    class="text-red-600 hover:text-red-800"
-                    title="Delete summary"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 6h18"></path>
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                    </svg>
-                </button>
-            </li>
-        {% endfor %}
-        </ul>
+        <table class="content-table">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Date</th>
+                    <th>Commentary</th>
+                    <th colspan="2">View</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for id, date, type, commentary in summaries %}
+                    <tr>
+                        <td>
+                            <span class="summary-type-badge {% if type == 'Weekly' %}weekly{% else %}daily{% endif %}">
+                                {{ type }}
+                            </span>
+                        </td>
+                        <td class="date-column">{{ date }}</td>
+                        <td class="commentary-cell">{{ commentary or 'No commentary' }}</td>
+                        <td>
+                            <a href="{{ url_for('web.get_email', id=id) }}" class="table-link">
+                                Web Version
+                            </a>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('web.get_email2', id=id) }}" class="table-link">
+                                Email Version
+                            </a>
+                        </td>
+                        <td class="text-center">
+                            <button 
+                                onclick="showDeleteConfirm('summary', {{ id }}, '{{ date }}')"
+                                class="table-action-btn delete"
+                                title="Delete summary"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 6h18"></path>
+                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
-<p>&nbsp;</p>
+
 <div class="category mt-8">
     <h2>Recent Articles</h2>
     <div class="markdown-content">
-        <table class="min-w-full">
+        <table class="content-table">
             <thead>
-                <tr class="border-b">
-                    <th class="text-left py-2">Title</th>
-                    <th class="text-left py-2">Summary</th>
-                    <th class="text-left py-2">Date</th>
-                    <th class="text-left py-2">Actions</th>
+                <tr>
+                    <th>Title</th>
+                    <th>Summary</th>
+                    <th>Date</th>
+                    <th class="text-center">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for id, title, url, summary, date in articles %}
-                    <tr class="border-b hover:bg-gray-50">
-                        <td class="py-2"><a href="{{ url }}" target="_blank" class="text-blue-600 hover:text-blue-800">{{ title }}</a></td>
-                        <td class="py-2">{{ summary[:200] }}...</td>
-                        <td class="py-2">{{ date }}</td>
-                        <td class="py-2">
+                    <tr>
+                        <td>
+                            <a href="{{ url }}" target="_blank" class="table-link">{{ title }}</a>
+                        </td>
+                        <td class="article-summary">{{ summary }}</td>
+                        <td class="date-column">{{ date }}</td>
+                        <td class="text-center">
                             <button 
                                 onclick="showDeleteConfirm('article', {{ id }}, '{{ title }}')"
-                                class="text-red-600 hover:text-red-800"
+                                class="table-action-btn delete"
+                                title="Delete article"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M3 6h18"></path>
