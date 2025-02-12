@@ -88,8 +88,32 @@ class FeedSummarizer:
         self.app, self.db = get_db()
         self.app.app_context().push()
 
+    def cleanup_old_articles(self):
+        """Delete articles that are older than 3 days."""
+        try:
+            cutoff_date = datetime.now(timezone.utc) - timedelta(days=3)
+            old_articles = Article.query.filter(Article.published < cutoff_date).all()
+            
+            if old_articles:
+                count = len(old_articles)
+                for article in old_articles:
+                    self.db.session.delete(article)
+                
+                self.db.session.commit()
+                logger.info(f"Successfully deleted {count} articles older than 3 days")
+            else:
+                logger.info("No articles found older than 3 days")
+                
+        except Exception as e:
+            logger.error(f"Error cleaning up old articles: {str(e)}")
+            self.db.session.rollback()
+            raise
+
     def generate_daily_summary(self) -> dict:
         try:
+            # Clean up old articles before generating new summary
+            self.cleanup_old_articles()
+            
             today = datetime.now(timezone.utc).date().isoformat()
             twelve_hours_ago = (datetime.now(timezone.utc) - timedelta(hours=12)).isoformat()
             
