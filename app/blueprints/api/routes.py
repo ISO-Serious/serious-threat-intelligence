@@ -45,7 +45,7 @@ def generate_summary():
     
 @api.route('/generate-weekly', methods=['POST'])
 @requires_auth
-def generate_summary():
+def generate_weekly():
     try:
         if not os.getenv('DATABASE_URL') or not os.getenv('CLAUDE_API_KEY'):
             return jsonify({'status': 'error', 'message': 'Required env vars not set'}), 500
