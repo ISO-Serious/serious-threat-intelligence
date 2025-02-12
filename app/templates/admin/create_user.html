@@ -1,13 +1,18 @@
+{# templates/admin/base.html #}
 {% extends "base.html" %}
 
 {% block content %}
 <div class="header">
     <div class="header-content">
         <div class="header-text">
-            <h1>Create New User</h1>
+            <h1>{% block admin_title %}Admin - Create User{% endblock %}</h1>
         </div>
     </div>
 </div>
+
+{% include 'admin/_nav.html' %}
+
+{% block admin_content %}
 
 <div class="category">
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -65,4 +70,4 @@
         </div>
     </form>
 </div>
-{% endblock %}
+{% endblock %}{% endblock %}

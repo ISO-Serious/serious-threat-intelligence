@@ -1,13 +1,25 @@
 from functools import wraps
-from flask import session, redirect, url_for, request, jsonify, current_app
+from flask import session, redirect, url_for, request, jsonify, current_app, g
 from app.models import User, UserSession
 import jwt
 from datetime import datetime
 
+def get_current_user_from_token(auth_token):
+    """Helper function to get user from token"""
+    try:
+        payload = jwt.decode(
+            auth_token,
+            current_app.config['SECRET_KEY'],
+            algorithms=['HS256']
+        )
+        return User.query.get(payload['user_id'])
+    except jwt.InvalidTokenError:
+        return None
+
 def requires_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        # Keep the email2 endpoint public as per existing code
+        # Keep the email2 endpoint public
         if request.endpoint == 'web.email2':
             return f(*args, **kwargs)
         
@@ -20,12 +32,13 @@ def requires_auth(f):
             return redirect(url_for('auth.login', next=request.url))
         
         try:
-            # Verify the token
-            payload = jwt.decode(
-                auth_token,
-                current_app.config['SECRET_KEY'],
-                algorithms=['HS256']
-            )
+            # Verify the token and get user
+            user = get_current_user_from_token(auth_token)
+            if not user:
+                session.pop('auth_token', None)
+                if request.blueprint == 'api':
+                    return jsonify({'error': 'Invalid token'}), 401
+                return redirect(url_for('auth.login'))
             
             # Check if token is in active sessions
             user_session = UserSession.query.filter_by(
@@ -37,33 +50,18 @@ def requires_auth(f):
                 session.pop('auth_token', None)
                 if request.blueprint == 'api':
                     return jsonify({'error': 'Session expired'}), 401
-                return redirect(url_for('auth.login', next=request.url))
-            
-            # Check if user is still active
-            user = User.query.get(payload['user_id'])
-            if not user or not user.is_active:
-                session.pop('auth_token', None)
-                if request.blueprint == 'api':
-                    return jsonify({'error': 'Account disabled'}), 401
                 return redirect(url_for('auth.login'))
             
-            # Store user info in g for access in views
-            from flask import g
+            # Set current user in flask.g
             g.current_user = user
             
             return f(*args, **kwargs)
-            
-        except jwt.ExpiredSignatureError:
-            session.pop('auth_token', None)
-            if request.blueprint == 'api':
-                return jsonify({'error': 'Token expired'}), 401
-            return redirect(url_for('auth.login', next=request.url))
             
         except jwt.InvalidTokenError:
             session.pop('auth_token', None)
             if request.blueprint == 'api':
                 return jsonify({'error': 'Invalid token'}), 401
-            return redirect(url_for('auth.login', next=request.url))
+            return redirect(url_for('auth.login'))
             
     return decorated
 

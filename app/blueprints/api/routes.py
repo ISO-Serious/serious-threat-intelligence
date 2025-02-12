@@ -13,6 +13,9 @@ import json
 logger = logging.getLogger(__name__)
 api = Blueprint('api', __name__, url_prefix='/api')
 
+def strip_html(text):
+    return re.sub('<[^<]+?>', '', text)
+
 @api.route('/collect-feeds', methods=['POST'])
 @requires_auth
 def collect_feeds():

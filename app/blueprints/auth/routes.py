@@ -4,8 +4,13 @@ from app.models import User, UserSession
 from datetime import datetime
 import jwt
 from functools import wraps
+import re
+from app.utils.database import get_all_summary_dates, get_recent_articles
 
 auth = Blueprint('auth', __name__)
+
+def strip_html(text):
+    return re.sub('<[^<]+?>', '', text)
 
 def admin_required(f):
     @wraps(f)
@@ -250,3 +255,28 @@ def revoke_session(session_id):
     
     flash('Session revoked successfully', 'success')
     return redirect(url_for('auth.list_sessions'))
+
+@auth.route('/admin/manage-content')
+@admin_required
+def manage_content():
+    try:
+        summaries = get_all_summary_dates()
+        articles = get_recent_articles()
+        
+        formatted_summaries = [
+            (id, 
+             datetime.fromisoformat(date).strftime('%A, %B %d, %Y'),
+             (summary_type or 'daily').capitalize(),
+             commentary) # Include commentary in the tuple
+            for id, date, summary_type, commentary in summaries
+        ]
+        
+        return render_template(
+            'admin/manage_content.html',
+            summaries=formatted_summaries,
+            articles=[(article[0], article[1], article[2], strip_html(article[3]), 
+                      datetime.fromisoformat(str(article[4])).strftime('%B %d, %Y'))
+                     for article in articles]
+        )
+    except Exception as e:
+        return f"Error listing summaries: {str(e)}", 500

@@ -1,9 +1,19 @@
+{# templates/admin/base.html #}
 {% extends "base.html" %}
 
 {% block content %}
 <div class="header">
-    <h1>Serious Intelligence Reports</h1>
+    <div class="header-content">
+        <div class="header-text">
+            <h1>{% block admin_title %}Admin - Manage Content{% endblock %}</h1>
+        </div>
+    </div>
 </div>
+
+{% include 'admin/_nav.html' %}
+
+{% block admin_content %}
+
 <div class="action-buttons">
     <button onclick="showGenerateConfirm('daily')" class="action-button primary">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -47,12 +57,12 @@
                         <td class="date-column">{{ date }}</td>
                         <td class="commentary-cell">{{ commentary or 'No commentary' }}</td>
                         <td>
-                            <a href="{{ url_for('web.get_email', id=id) }}" class="table-link">
+                            <a href="{{ url_for('web.web_formatted_email', id=id) }}" class="table-link">
                                 Web Version
                             </a>
                         </td>
                         <td>
-                            <a href="{{ url_for('web.get_email2', id=id) }}" class="table-link">
+                            <a href="{{ url_for('web.mail_client_formatted', id=id) }}" class="table-link">
                                 Email Version
                             </a>
                         </td>
@@ -246,4 +256,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-{% endblock %}
+{% endblock %}{% endblock %}

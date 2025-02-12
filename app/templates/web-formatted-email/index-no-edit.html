@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header">
+    <div class="header-content">
+        <div class="header-text">
+            <h1>Serious Intelligence {{ summary_type | capitalize }}</h1>
+            <div class="date">{{ date }}</div>
+        </div>
+        <div class="logo">
+            <img src="{{ url_for('static', filename='images/dontpanic.png') }}" alt="Company Logo">
+        </div>
+    </div>
+</div>
+
+
+<div class="commentary-section">
+    {% if commentary %}
+        <div class="commentary-text">{{ commentary | markdown | safe }}</div>
+    {% endif %}
+</div>
+
+
+{% if summary is mapping %}
+    <div class="quick-actions">
+        <h2>Critical Security Tasks</h2>
+        <div class="priority-tasks">
+            {% for category, content in summary.items() %}
+                {% if content.actionable_tasks %}
+                    {% for task in content.actionable_tasks %}
+                        <div class="task-item {% if 'Update' in task.task or 'Critical' in task.description %}urgent{% endif %}" 
+                             data-category="{{ category }}" 
+                             data-task-index="{{ loop.index0 }}">
+                            <div class="task-header">
+                                <strong>{{ task.task }}</strong>
+                            </div>
+                            <div class="task-description">{{ task.description }}</div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="insights">
+        {% for category, content in summary.items() %}
+            {% if content.get('section_title') and content.get('section_title') != 'No Summary Available' %}
+            <div class="category">
+                <div class="category-header">
+                    <h3>{{ content.get('section_title', 'No Title') }}</h3>
+                    <span class="context-tag">{{ category }}</span>
+                </div>
+                <div class="summary-content markdown-content">
+                    {% if content.get('summary') %}
+                    {{ content.summary | markdown | safe }}
+                    {% else %}
+                    <p>No summary available for this section.</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    
+{% endif %}
+{% endblock %}

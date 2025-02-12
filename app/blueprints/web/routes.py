@@ -12,90 +12,64 @@ web = Blueprint('web', __name__)
 def strip_html(text):
     return re.sub('<[^<]+?>', '', text)
 
+def get_formatted_summary(summary_id=None):
+    """Helper function to get and format summary data.
+    
+    Args:
+        summary_id: Optional ID of specific summary to retrieve
+        
+    Returns:
+        tuple: (formatted_data, status_code, error_message)
+            formatted_data: dict with summary data or None
+            status_code: HTTP status code
+            error_message: Error message string or None
+    """
+    try:
+        result = get_summary_by_id(summary_id) if summary_id else get_latest_summary()
+        
+        if not result:
+            return None, 404, "Summary not found"
+            
+        date_str = datetime.fromisoformat(result['date']).strftime('%A, %B %d, %Y')
+        summary_dict = json.loads(result['summary'])
+        
+        formatted_data = {
+            'summary': summary_dict,
+            'date': date_str,
+            'commentary': result.get('commentary'),
+            'summary_type': result.get('summary_type')
+        }
+        
+        return formatted_data, 200, None
+        
+    except Exception as e:
+        logger.error(f"Error retrieving summary: {str(e)}")
+        logger.exception(e)  # Log full stack trace
+        return None, 500, f"Error generating email view: {str(e)}"
+
 @web.route('/')
 def index():
-    try:
-        summary_id = request.args.get('id')
-        
-        result = get_summary_by_id(summary_id) if summary_id else get_latest_summary()
-        
-        if result:
-            date_str = datetime.fromisoformat(result['date']).strftime('%A, %B %d, %Y')
-            summary_dict = json.loads(result['summary'])
-            commentary = result.get('commentary')
-            summary_type = result.get('summary_type')
-            
-            return render_template('email/summary.html', 
-                                 summary=summary_dict,
-                                 date=date_str,
-                                 commentary=commentary,
-                                 summary_type=summary_type)
-        else:
-            return "Summary not found", 404
-            
-    except Exception as e:
-        logger.error(f"Error generating email view: {str(e)}")
-        logger.exception(e)  # This will log the full stack trace
-        return f"Error generating email view: {str(e)}", 500
-
-@web.route('/health')
-def health_check():
-    return "OK", 200
-
-@web.route('/list-emails')
-@requires_auth
-def list_emails():
-    try:
-        summaries = get_all_summary_dates()
-        articles = get_recent_articles()
-        
-        formatted_summaries = [
-            (id, 
-             datetime.fromisoformat(date).strftime('%A, %B %d, %Y'),
-             (summary_type or 'daily').capitalize(),
-             commentary) # Include commentary in the tuple
-            for id, date, summary_type, commentary in summaries
-        ]
-        
-        return render_template(
-            'email/list.html',
-            summaries=formatted_summaries,
-            articles=[(article[0], article[1], article[2], strip_html(article[3]), 
-                      datetime.fromisoformat(str(article[4])).strftime('%B %d, %Y'))
-                     for article in articles]
-        )
-    except Exception as e:
-        logger.error(f"Error listing summaries: {str(e)}")
-        logger.exception("Full traceback:")
-        return f"Error listing summaries: {str(e)}", 500
+    summary_id = request.args.get('id')
+    data, status_code, error = get_formatted_summary(summary_id)
     
-@web.route('/email')
-def get_email():
-    try:
-        summary_id = request.args.get('id')
+    if error:
+        return error, status_code
         
-        result = get_summary_by_id(summary_id) if summary_id else get_latest_summary()
-        
-        if result:
-            date_str = datetime.fromisoformat(result['date']).strftime('%A, %B %d, %Y')
-            summary_dict = json.loads(result['summary'])
-            commentary = result.get('commentary')
-            summary_type = result.get('summary_type')
-            
-            return render_template('email/summary.html', 
-                                 summary=summary_dict,
-                                 date=date_str,
-                                 commentary=commentary,
-                                 summary_type=summary_type)
-            return "Summary not found", 404
-            
-    except Exception as e:
-        logger.error(f"Error generating email view: {str(e)}")
-        logger.exception(e)  # This will log the full stack trace
-        return f"Error generating email view: {str(e)}", 500
+    return render_template('web-formatted-email/index-no-edit.html', **data)
 
-@web.route('/email2')
-def get_email2():
+@web.route('/email')
+def web_formatted_email():
+    summary_id = request.args.get('id')
+    data, status_code, error = get_formatted_summary(summary_id)
+    
+    if error:
+        return error, status_code
+        
+    return render_template('web-formatted-email/index.html', **data)
+
+# Basic HTML for mail client formatted email
+@web.route('/email/mail-client-formatted')
+def mail_client_formatted():
     try:
         summary_id = request.args.get('id')
         result = get_summary_by_id(summary_id) if summary_id else get_latest_summary()
@@ -103,7 +77,7 @@ def get_email2():
         if result:
             date_str = datetime.fromisoformat(result['date']).strftime('%A, %B %d, %Y')
             summary_dict = json.loads(result['summary'])
-            return render_template('email2/email.html', 
+            return render_template('mail-client-formatted-email/email.html', 
                                 summary=summary_dict, 
                                 date=date_str,
                                 commentary=result.get('commentary'))
@@ -112,3 +86,7 @@ def get_email2():
     except Exception as e:
         logger.error(f"Error generating email2 view: {str(e)}")
         return f"Error generating email view: {str(e)}", 500
+    
+@web.route('/health')
+def health_check():
+    return "OK", 200

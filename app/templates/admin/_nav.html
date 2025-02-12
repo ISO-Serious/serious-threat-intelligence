@@ -1,0 +1,27 @@
+{# templates/admin/_nav.html #}
+<nav class="admin-nav">
+    <div class="nav-links">
+        <a href="{{ url_for('auth.admin_dashboard') }}" 
+           class="nav-link {% if request.endpoint == 'auth.admin_dashboard' %}active{% endif %}">
+            Dashboard
+        </a>
+        <a href="{{ url_for('auth.admin_users') }}" 
+           class="nav-link {% if request.endpoint == 'auth.admin_users' %}active{% endif %}">
+            Users
+        </a>
+        <a href="{{ url_for('auth.list_sessions') }}" 
+           class="nav-link {% if request.endpoint == 'auth.list_sessions' %}active{% endif %}">
+            Sessions
+        </a>
+        <a href="{{ url_for('auth.manage_content') }}" 
+           class="nav-link {% if request.endpoint == 'web.list_summaries' %}active{% endif %}">
+            Reports
+        </a>
+    </div>
+    <div class="user-section">
+        {% if g.get('current_user') %}
+            <span class="username">{{ g.current_user.username }}</span>
+        {% endif %}
+        <a href="{{ url_for('auth.logout') }}" class="nav-link logout">Logout</a>
+    </div>
+</nav>

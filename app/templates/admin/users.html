@@ -1,14 +1,18 @@
+{# templates/admin/base.html #}
 {% extends "base.html" %}
 
 {% block content %}
 <div class="header">
     <div class="header-content">
         <div class="header-text">
-            <h1>User Management</h1>
+            <h1>{% block admin_title %}Admin - Manage Users{% endblock %}</h1>
         </div>
     </div>
 </div>
 
+{% include 'admin/_nav.html' %}
+
+{% block admin_content %}
 <div class="action-buttons">
     <a href="{{ url_for('auth.admin_create_user') }}" class="action-button primary">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -126,4 +130,4 @@ window.addEventListener('click', function(e) {
     }
 });
 </script>
-{% endblock %}
+{% endblock %}{% endblock %}
