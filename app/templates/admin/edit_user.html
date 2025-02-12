@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="header">
+    <div class="header-content">
+        <div class="header-text">
+            <h1>Edit User: {{ user.username }}</h1>
+        </div>
+    </div>
+</div>
+
+<div class="category">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="{% if category == 'error' %}task-item urgent{% else %}task-item{% endif %} mb-4">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST" class="space-y-4">
+        <div>
+            <label for="username" class="block mb-2">Username</label>
+            <input type="text" 
+                   name="username" 
+                   id="username" 
+                   required 
+                   value="{{ user.username }}"
+                   class="w-full p-2 border rounded focus:outline-none focus:border-primary-color">
+        </div>
+        <div class="mt-4">
+            <label for="email" class="block mb-2">Email</label>
+            <input type="email" 
+                   name="email" 
+                   id="email" 
+                   required 
+                   value="{{ user.email }}"
+                   class="w-full p-2 border rounded focus:outline-none focus:border-primary-color">
+        </div>
+        <div class="mt-4">
+            <label for="password" class="block mb-2">New Password (leave blank to keep current)</label>
+            <input type="password" 
+                   name="password" 
+                   id="password" 
+                   class="w-full p-2 border rounded focus:outline-none focus:border-primary-color">
+        </div>
+        <div class="mt-4">
+            <label for="role" class="block mb-2">Role</label>
+            <select name="role" 
+                    id="role" 
+                    required 
+                    class="w-full p-2 border rounded focus:outline-none focus:border-primary-color">
+                <option value="user" {% if user.role == 'user' %}selected{% endif %}>User</option>
+                <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+            </select>
+        </div>
+        <div class="mt-4">
+            <label class="flex items-center">
+                <input type="checkbox" 
+                       name="is_active" 
+                       {% if user.is_active %}checked{% endif %}
+                       class="mr-2">
+                <span>Account Active</span>
+            </label>
+        </div>
+        <div class="mt-6 flex gap-4">
+            <button type="submit" class="btn-primary">
+                Save Changes
+            </button>
+            <a href="{{ url_for('auth.admin_users') }}" class="btn-secondary">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

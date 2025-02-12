@@ -24,6 +24,11 @@ psycopg2-binary==2.9.9  # PostgreSQL adapter for Python
 # API Integration
 anthropic>=0.6.0      # For interacting with Claude API
 
+# Authentication and Security
+PyJWT==2.8.0          # For handling JWT tokens
+bcrypt==4.1.2         # For password hashing (if not using Werkzeug's built-in)
+flask-limiter==3.5.0  # For rate limiting login attempts
+
 # Utility libraries
 requests>=2.31.0      # For making HTTP requests
 beautifulsoup4>=4.12.2  # For additional HTML parsing capabilities

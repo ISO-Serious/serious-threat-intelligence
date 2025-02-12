@@ -27,4 +27,8 @@ find . -type f \( \
     -name "wsgi.py" \
     \) -not -path "./ready_to_copy/*" -not -path "./venv/*" -not -path "./.venv/*" -not -path "*/__pycache__/*" -exec cp {} ready_to_copy/ \;
 
+# Generate tree output excluding ready_to_copy directory
+tree -a -I 'ready_to_copy|venv|.venv' > tree.txt
+
 echo "Flask application files have been copied to ready_to_copy directory"
+echo "Directory structure has been saved to tree.txt"
