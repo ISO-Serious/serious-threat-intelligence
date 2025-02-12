@@ -27,7 +27,7 @@ class Config:
 
     # Authentication settings
     AUTH_USERNAME = os.environ.get('AUTH_USERNAME', 'admin')
-    AUTH_PASSWORD = os.environ.get('AUTH_PASSWORD', 'munk1luvver')
+    AUTH_PASSWORD = os.environ.get('AUTH_PASSWORD', 'We22TvkW9Loiqs7KZ8Fa')
 
 
 class DevelopmentConfig(Config):
