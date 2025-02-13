@@ -9,6 +9,14 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+    {% if request.endpoint == 'web.index' and session.get('auth_token') %}
+    <div style="text-align: right; padding: 1rem 2rem;">
+        <a href="{{ url_for('auth.admin_dashboard') }}" 
+           class="text-sm text-gray-600 hover:text-primary-color">
+            Admin Dashboard →
+        </a>
+    </div>
+    {% endif %}
     {% block content %}{% endblock %}
     {% block extra_js %}{% endblock %}
 </body>
