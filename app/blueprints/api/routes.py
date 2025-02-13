@@ -8,6 +8,8 @@ from app.utils.json import parse_double_encoded_json
 from app.utils.auth import requires_auth
 import logging
 import json
+import re
+from app.utils.auth import requires_api_token
 
 
 logger = logging.getLogger(__name__)
@@ -17,7 +19,7 @@ def strip_html(text):
     return re.sub('<[^<]+?>', '', text)
 
 @api.route('/collect-feeds', methods=['POST'])
-@requires_auth
+@requires_api_token
 def collect_feeds():
     try:
         if not os.getenv('DATABASE_URL'):
@@ -32,7 +34,7 @@ def collect_feeds():
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @api.route('/generate-summary', methods=['POST'])
-@requires_auth
+@requires_api_token
 def generate_summary():
     try:
         if not os.getenv('DATABASE_URL') or not os.getenv('CLAUDE_API_KEY'):
@@ -47,7 +49,7 @@ def generate_summary():
         return jsonify({'status': 'error', 'message': str(e)}), 500
     
 @api.route('/generate-weekly', methods=['POST'])
-@requires_auth
+@requires_api_token
 def generate_weekly():
     try:
         if not os.getenv('DATABASE_URL') or not os.getenv('CLAUDE_API_KEY'):

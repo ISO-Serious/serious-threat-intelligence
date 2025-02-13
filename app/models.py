@@ -4,6 +4,25 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 from flask import current_app
 import uuid
+import secrets
+
+class APIToken(db.Model):
+    __tablename__ = 'api_tokens'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    token = db.Column(db.String(64), unique=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_used_at = db.Column(db.DateTime)
+    is_active = db.Column(db.Boolean, default=True)
+    
+    @staticmethod
+    def generate_token():
+        return secrets.token_urlsafe(32)
+    
+    def update_last_used(self):
+        self.last_used_at = datetime.utcnow()
+        db.session.commit()
 
 class Feed(db.Model):
     __tablename__ = 'feeds'

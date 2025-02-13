@@ -3,6 +3,25 @@ from flask import session, redirect, url_for, request, jsonify, current_app, g
 from app.models import User, UserSession
 import jwt
 from datetime import datetime
+from app.models import APIToken
+
+def requires_api_token(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.headers.get('X-API-Token')
+        
+        if not token:
+            return jsonify({'error': 'API token required'}), 401
+            
+        api_token = APIToken.query.filter_by(token=token, is_active=True).first()
+        if not api_token:
+            return jsonify({'error': 'Invalid or inactive API token'}), 401
+            
+        # Update last used timestamp
+        api_token.update_last_used()
+        
+        return f(*args, **kwargs)
+    return decorated
 
 def get_current_user_from_token(auth_token):
     """Helper function to get user from token"""
