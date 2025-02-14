@@ -91,7 +91,8 @@ def get_formatted_email_response(summary_type='weekly'):
             'mail-client-formatted-email/email.html',
             summary=summary_dict,
             date=date_str,
-            commentary=result.get('commentary')
+            commentary=result.get('commentary'),
+            summary_type=result.get('summary_type')
         ), 200
             
     except Exception as e:
