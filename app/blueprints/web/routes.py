@@ -67,25 +67,47 @@ def web_formatted_email():
         
     return render_template('web-formatted-email/index.html', **data)
 
-# Basic HTML for mail client formatted email
-@web.route('/email/mail-client-formatted')
-def mail_client_formatted():
+def get_formatted_email_response(summary_type='weekly'):
+    """
+    Helper function to handle formatted email requests for both weekly and daily summaries.
+    
+    Args:
+        summary_type (str): Type of summary to retrieve ('weekly' or 'daily')
+        
+    Returns:
+        tuple: Contains either (rendered template, status_code) or (error message, status_code)
+    """
     try:
         summary_id = request.args.get('id')
-        result = get_summary_by_id(summary_id) if summary_id else get_latest_summary()
+        result = get_summary_by_id(summary_id) if summary_id else get_latest_summary(summary_type)
         
-        if result:
-            date_str = datetime.fromisoformat(result['date']).strftime('%A, %B %d, %Y')
-            summary_dict = json.loads(result['summary'])
-            return render_template('mail-client-formatted-email/email.html', 
-                                summary=summary_dict, 
-                                date=date_str,
-                                commentary=result.get('commentary'))
-        return "Summary not found", 404
+        if not result:
+            return "Summary not found", 404
+            
+        date_str = datetime.fromisoformat(result['date']).strftime('%A, %B %d, %Y')
+        summary_dict = json.loads(result['summary'])
+        
+        return render_template(
+            'mail-client-formatted-email/email.html',
+            summary=summary_dict,
+            date=date_str,
+            commentary=result.get('commentary')
+        ), 200
             
     except Exception as e:
-        logger.error(f"Error generating email2 view: {str(e)}")
-        return f"Error generating email view: {str(e)}", 500
+        error_msg = f"Error generating email view: {str(e)}"
+        logger.error(error_msg)
+        return error_msg, 500
+
+@web.route('/email/mail-client-formatted')
+def mail_client_formatted_weekly():
+    """Route for weekly formatted emails (default)"""
+    return get_formatted_email_response()
+
+@web.route('/email/mail-client-formatted/daily')
+def mail_client_formatted_daily():
+    """Route for daily formatted emails"""
+    return get_formatted_email_response('daily')
     
 @web.route('/health')
 def health_check():

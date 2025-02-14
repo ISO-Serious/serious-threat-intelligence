@@ -6,11 +6,15 @@ import json
 
 logger = logging.getLogger(__name__)
 
-def get_latest_summary():
-    result = DailySummary.query.filter_by(status='complete', summary_type='weekly')\
+def get_latest_summary(summary_type='weekly'):
+
+    if summary_type not in ['weekly', 'daily']:
+        logger.error(f"summary_type must be either 'weekly' or 'daily'. Got: {summary_type}")
+
+    result = DailySummary.query.filter_by(status='complete', summary_type=summary_type)\
         .order_by(DailySummary.generated_at.desc())\
         .first()
-    
+        
     if result:
         try:
             summary = result.summary if isinstance(result.summary, dict) else parse_double_encoded_json(result.summary)

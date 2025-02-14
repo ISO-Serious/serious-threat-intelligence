@@ -13,7 +13,7 @@
     </div>
 </div>
 
-{% if session.get('authenticated') %}
+{% if session.get('auth_token') %}
 <div class="commentary-section">
     <div id="commentary-display" class="commentary-display {% if not commentary %}empty{% endif %}">
         {% if commentary %}
@@ -61,7 +61,7 @@
                              data-task-index="{{ loop.index0 }}">
                             <div class="task-header">
                                 <strong>{{ task.task }}</strong>
-                                {% if session.get('authenticated') %}
+                                {% if session.get('auth_token') %}
                                 <button class="delete-task" title="Delete task">×</button>
                                 {% endif %}
                             </div>
@@ -93,7 +93,7 @@
         {% endfor %}
     </div>
 
-    {% if session.get('authenticated') %}
+    {% if session.get('auth_token') %}
     <!-- Confirmation Dialog -->
     <div id="deleteConfirmDialog" class="modal" style="display: none;">
         <div class="modal-content">

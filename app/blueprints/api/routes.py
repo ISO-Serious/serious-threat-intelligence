@@ -5,11 +5,10 @@ from app.models import Article, DailySummary
 from app.utils.process import run_script_async
 from app.utils.database import get_latest_summary, get_summary_by_id
 from app.utils.json import parse_double_encoded_json
-from app.utils.auth import requires_auth
+from app.utils.auth import requires_auth_or_token
 import logging
 import json
 import re
-from app.utils.auth import requires_api_token
 
 
 logger = logging.getLogger(__name__)
@@ -19,7 +18,7 @@ def strip_html(text):
     return re.sub('<[^<]+?>', '', text)
 
 @api.route('/collect-feeds', methods=['POST'])
-@requires_api_token
+@requires_auth_or_token
 def collect_feeds():
     try:
         if not os.getenv('DATABASE_URL'):
@@ -34,7 +33,7 @@ def collect_feeds():
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @api.route('/generate-summary', methods=['POST'])
-@requires_api_token
+@requires_auth_or_token
 def generate_summary():
     try:
         if not os.getenv('DATABASE_URL') or not os.getenv('CLAUDE_API_KEY'):
@@ -49,7 +48,7 @@ def generate_summary():
         return jsonify({'status': 'error', 'message': str(e)}), 500
     
 @api.route('/generate-weekly', methods=['POST'])
-@requires_api_token
+@requires_auth_or_token
 def generate_weekly():
     try:
         if not os.getenv('DATABASE_URL') or not os.getenv('CLAUDE_API_KEY'):
@@ -64,7 +63,7 @@ def generate_weekly():
         return jsonify({'status': 'error', 'message': str(e)}), 500    
 
 @api.route('/check-process/<int:pid>', methods=['GET'])
-@requires_auth
+@requires_auth_or_token
 def check_process(pid):
     try:
         os.kill(pid, 0)
@@ -73,7 +72,7 @@ def check_process(pid):
         return jsonify({'status': 'completed', 'process_id': pid})
 
 @api.route('/summary')
-@requires_auth
+@requires_auth_or_token
 def get_summary():
     try:
         result = get_latest_summary()
@@ -85,7 +84,7 @@ def get_summary():
         return jsonify({"error": str(e)}), 500
 
 @api.route('/summary/<int:summary_id>', methods=['DELETE'])
-@requires_auth
+@requires_auth_or_token
 def delete_summary(summary_id):
     try:
         summary = DailySummary.query.get_or_404(summary_id)
@@ -97,7 +96,7 @@ def delete_summary(summary_id):
         return jsonify({"error": str(e)}), 500
     
 @api.route('/article/<int:id>', methods=['DELETE'])
-@requires_auth
+@requires_auth_or_token
 def delete_article(id):
     try:
         article = Article.query.get_or_404(id)
@@ -109,7 +108,7 @@ def delete_article(id):
         return f"Error deleting article: {str(e)}", 500
     
 @api.route('/summary/<int:summary_id>/task', methods=['DELETE'])
-@requires_auth
+@requires_auth_or_token
 def delete_task(summary_id):
     category = request.args.get('category')
     task_index = request.args.get('task_index', type=int)
@@ -148,7 +147,7 @@ def delete_task(summary_id):
         return jsonify({"error": str(e)}), 500
     
 @api.route('/summary/<int:summary_id>/commentary', methods=['POST'])
-@requires_auth
+@requires_auth_or_token
 def update_commentary(summary_id):
     try:
         logger.info(f"Received request to update commentary for summary {summary_id}")
@@ -182,7 +181,7 @@ def update_commentary(summary_id):
         return jsonify({"error": str(e)}), 500
     
 @api.route('/markdown-preview', methods=['POST'])
-@requires_auth
+@requires_auth_or_token
 def markdown_preview():
     try:
         if not request.is_json:

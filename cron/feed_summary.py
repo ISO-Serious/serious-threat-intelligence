@@ -29,6 +29,7 @@ class ArticleSummarizer:
 
     def generate_summary(self, articles, category, period_days=1):
         if not articles:
+            logger.info(f"No articles found")
             return {
                 "section_title": "No Summary Available",
                 "summary": "No articles to summarize for this category.",
@@ -53,6 +54,7 @@ Summary: {article.summary}
         )
 
         try:
+
             response = self.client.messages.create(
                 model="claude-3-5-sonnet-20241022",
                 max_tokens=2000,
@@ -191,7 +193,7 @@ def main():
             api_key = os.getenv('CLAUDE_API_KEY') or args.api_key
             if not api_key:
                 raise ValueError("API key not found in CLAUDE_API_KEY environment variable or --api-key argument")
-                
+ 
             summarizer = ArticleSummarizer(api_key=api_key)
             feed_summarizer = FeedSummarizer(summarizer)
             summary = feed_summarizer.generate_daily_summary(summary_period=args.summary_period)

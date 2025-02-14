@@ -1,26 +1,44 @@
 from functools import wraps
 from flask import session, redirect, url_for, request, jsonify, current_app, g
-from app.models import User, UserSession
+from app.models import User, UserSession, APIToken
 import jwt
 from datetime import datetime
 from app.models import APIToken
 
-def requires_api_token(f):
+
+def requires_auth_or_token(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = request.headers.get('X-API-Token')
+        # First check for API token
+        api_token = request.headers.get('X-API-Token')
+        if api_token:
+            token = APIToken.query.filter_by(token=api_token, is_active=True).first()
+            if token:
+                token.update_last_used()
+                return f(*args, **kwargs)
         
-        if not token:
-            return jsonify({'error': 'API token required'}), 401
+        # If no valid API token, check for session auth
+        auth_token = session.get('auth_token')
+        if not auth_token:
+            return jsonify({'error': 'Authentication required'}), 401
             
-        api_token = APIToken.query.filter_by(token=token, is_active=True).first()
-        if not api_token:
-            return jsonify({'error': 'Invalid or inactive API token'}), 401
+        try:
+            # Your existing session token validation logic
+            payload = jwt.decode(
+                auth_token,
+                current_app.config['SECRET_KEY'],
+                algorithms=['HS256']
+            )
             
-        # Update last used timestamp
-        api_token.update_last_used()
-        
-        return f(*args, **kwargs)
+            user = User.query.get(payload['user_id'])
+            if not user or not user.is_active:
+                return jsonify({'error': 'Invalid or inactive user'}), 401
+                
+            return f(*args, **kwargs)
+            
+        except jwt.InvalidTokenError:
+            return jsonify({'error': 'Invalid session'}), 401
+            
     return decorated
 
 def get_current_user_from_token(auth_token):
